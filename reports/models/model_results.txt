@@ -1,0 +1,48 @@
+
+--- Lasso Regression with Lags (2025-04-07 11:12) ---
+Lasso MAE: 0.91
+Lasso R² Score: 0.694
+
+--- Auto ARIMA (2025-04-07 11:12) ---
+Auto ARIMA MAE: 1.47
+Auto ARIMA R²: -0.065
+
+--- ARIMAX (2025-04-07 11:12) ---
+ARIMAX MAE: 0.50
+ARIMAX R²: 0.903
+
+--- ARIMAX Lagged (2025-04-07 11:12) ---
+ARIMAX Lagged MAE: 0.84
+ARIMAX Lagged R²: 0.710
+
+--- Lasso Regression (2025-04-07 11:12) ---
+Lasso MAE: 1.22
+Lasso R² Score: 0.436
+
+--- Lasso Regression with Lags (2025-04-07 11:12) ---
+Lasso MAE: 0.91
+Lasso R² Score: 0.694
+
+--- Ridge Regression (2025-04-07 11:12) ---
+Ridge MAE: 1.25
+Ridge R² Score: 0.400
+
+--- Uni Prophet Regression (2025-04-07 11:12) ---
+Uni Prophet MAE: 2.75
+Uni Prophet R² Score: -2.879
+
+--- Multi Prophet (2025-04-07 11:12) ---
+Multi Prophet MAE: 4.25
+Multi Prophet R² Score: -4.332
+
+--- Support Vector Regression (2025-04-07 11:12) ---
+SVM MAE: 1.43
+SVM R² Score: -0.051
+
+--- XGBoost Regression (2025-04-07 11:12) ---
+XGBoost MAE: 0.97
+XGBoost R² Score: 0.590
+
+--- Lasso Regression with Lags (2025-04-07 11:39) ---
+Lasso MAE: 0.91
+Lasso R² Score: 0.694

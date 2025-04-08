@@ -1,0 +1,70 @@
+import sys
+import os
+import datetime
+
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
+
+import pandas as pd
+import numpy as np
+import matplotlib.pyplot as plt
+from sklearn.metrics import mean_absolute_error, r2_score
+from pmdarima import auto_arima
+import warnings
+warnings.filterwarnings('ignore')
+
+def run_auto_arima_model(filepath='data/processed/processed.csv', target='Gulf'):
+    df = pd.read_csv(filepath)
+    df['date'] = pd.to_datetime(df['date'])
+
+    # --- Prepare dataframe ---
+    df = df[['date', target]].dropna()
+    df = df.rename(columns={'date': 'ds', target: 'y'})
+
+    # --- Train/Test Split ---
+    split_idx = int(len(df) * 0.8)
+    train = df.iloc[:split_idx]
+    test = df.iloc[split_idx:]
+
+    # --- Fit auto_arima model ---
+    model = auto_arima(train['y'], seasonal=True, stepwise=True, suppress_warnings=True, trace=True)
+    print(f'Best ARIMA Order: {model.order}')
+
+    # --- Forecast ---
+    forecast = model.predict(n_periods=len(test))
+
+    # --- Combine and plot ---
+    df_compare = test.copy()
+    df_compare['predicted'] = forecast
+
+    plt.figure(figsize=(12, 5))
+    plt.plot(df['ds'], df['y'], label='Actual', linewidth=2)
+    plt.plot(df_compare['ds'], df_compare['predicted'], label='Predicted', linestyle='--')
+    plt.axvline(df['ds'].iloc[split_idx], color='red', linestyle=':', label='Train/Test Split')
+    plt.title(f'Auto ARIMA: Actual vs Predicted {target}')
+    plt.xlabel('Date')
+    plt.ylabel(f'{target} Price')
+    plt.legend()
+    plt.grid(True)
+    plt.tight_layout()
+
+    results_dir = 'reports/models'
+    os.makedirs(results_dir, exist_ok=True)
+
+    plot_path = os.path.join(results_dir, f'{target}_auto_arima_prediction_plot.png')
+    plt.savefig(plot_path)
+    plt.close()
+
+    # --- Evaluation ---
+    mae = mean_absolute_error(df_compare['y'], df_compare['predicted'])
+    r2 = r2_score(df_compare['y'], df_compare['predicted'])
+    print(f'Mean Absolute Error (MAE) on Test Set: {mae:.2f}')
+    print(f'R² Score on Test Set: {r2:.3f}')
+
+    # Save metrics
+    with open(os.path.join(results_dir, 'model_results.txt'), 'a') as f:
+        f.write(f'\n--- Auto ARIMA ({datetime.datetime.now().strftime("%Y-%m-%d %H:%M")}) ---\n')
+        f.write(f'Auto ARIMA MAE: {mae:.2f}\n')
+        f.write(f'Auto ARIMA R²: {r2:.3f}\n')
+
+    return model
+
