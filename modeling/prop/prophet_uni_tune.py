@@ -11,7 +11,7 @@ from prophet import Prophet
 from sklearn.metrics import mean_absolute_error, r2_score
 from sklearn.model_selection import ParameterSampler
 
-def run_prophet_model(filepath='data/processed/processed.csv', target='Gulf'):
+def run_prophet_model_tuned(filepath='data/processed/processed.csv', target='Gulf'):
     df = pd.read_csv(filepath)
     df['date'] = pd.to_datetime(df['date'])
 
@@ -99,4 +99,3 @@ def run_prophet_model(filepath='data/processed/processed.csv', target='Gulf'):
 
     return best_forecast
 
-run_prophet_model()

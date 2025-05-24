@@ -1,92 +1,72 @@
 
---- Lasso Regression with Lags (2025-04-12 23:43) ---
+--- Lasso Regression with Lags (2025-05-24 11:11) ---
 Lasso MAE: 0.91
 Lasso R² Score: 0.694
 
---- Ridge Regression (2025-04-12 23:43) ---
+--- Ridge Regression (2025-05-24 11:11) ---
 Ridge MAE: 1.25
 Ridge R² Score: 0.400
 
---- Auto ARIMA (2025-04-12 23:43) ---
-Auto ARIMA MAE: 1.47
-Auto ARIMA R²: -0.065
-
---- ARIMAX (2025-04-12 23:43) ---
-ARIMAX MAE: 0.50
-ARIMAX R²: 0.903
-
---- ARIMAX Lagged (2025-04-12 23:43) ---
-ARIMAX Lagged MAE: 0.84
-ARIMAX Lagged R²: 0.710
-
---- Lasso Regression (2025-04-12 23:43) ---
-Lasso MAE: 1.22
-Lasso R² Score: 0.436
-
---- Lasso Regression with Lags (2025-04-12 23:43) ---
-Lasso MAE: 0.91
-Lasso R² Score: 0.694
-
---- Ridge Regression (2025-04-12 23:43) ---
-Ridge MAE: 1.25
-Ridge R² Score: 0.400
-
---- Uni Prophet Regression (2025-04-12 23:43) ---
+--- Uni Prophet Regression (2025-05-24 11:11) ---
 Uni Prophet MAE: 2.75
 Uni Prophet R² Score: -2.879
 
---- Multi Prophet (2025-04-12 23:43) ---
+--- Auto ARIMA (2025-05-24 11:11) ---
+Auto ARIMA MAE: 1.47
+Auto ARIMA R²: -0.065
+
+--- ARIMAX (2025-05-24 11:11) ---
+ARIMAX MAE: 0.50
+ARIMAX R²: 0.903
+
+--- ARIMAX Lagged (2025-05-24 11:11) ---
+ARIMAX Lagged MAE: 0.84
+ARIMAX Lagged R²: 0.710
+
+--- Lasso Regression (2025-05-24 11:11) ---
+Lasso MAE: 1.22
+Lasso R² Score: 0.436
+
+--- Lasso Regression with Lags (2025-05-24 11:11) ---
+Lasso MAE: 0.91
+Lasso R² Score: 0.694
+
+--- Ridge Regression (2025-05-24 11:11) ---
+Ridge MAE: 1.25
+Ridge R² Score: 0.400
+
+--- Uni Prophet Regression (2025-05-24 11:11) ---
+Uni Prophet MAE: 2.75
+Uni Prophet R² Score: -2.879
+
+--- Uni Prophet Regression (Tuned) (2025-05-24 11:11) ---
+Uni Prophet MAE: 7.07
+Uni Prophet R² Score: -18.267
+Best Parameters: {'seasonality_prior_scale': 5.0, 'seasonality_mode': 'additive', 'changepoint_prior_scale': 0.1}
+
+--- Multi Prophet (2025-05-24 11:11) ---
 Multi Prophet MAE: 4.25
 Multi Prophet R² Score: -4.332
 
---- Support Vector Regression (2025-04-12 23:43) ---
+--- Multi Prophet (Tuned) (2025-05-24 11:11) ---
+Multi Prophet MAE: 0.64
+Multi Prophet R² Score: 0.803
+Best Parameters: {'seasonality_prior_scale': 5.0, 'seasonality_mode': 'additive', 'changepoint_prior_scale': 0.001}
+
+--- Support Vector Regression (2025-05-24 11:11) ---
 SVM MAE: 1.43
 SVM R² Score: -0.051
 
---- XGBoost Regression (2025-04-12 23:43) ---
-XGBoost MAE: 0.97
-XGBoost R² Score: 0.590
-
---- XGBoost Regression (2025-04-25 14:42) ---
-XGBoost MAE: 0.92
-XGBoost R² Score: 0.692
-Best Parameters: {'subsample': 0.7, 'reg_lambda': 1.0, 'reg_alpha': 0, 'n_estimators': 300, 'max_depth': 5, 'learning_rate': 0.05, 'gamma': 1, 'colsample_bytree': 0.6}
-
---- Support Vector Regression (2025-04-25 14:45) ---
-SVM MAE: 1.51
-SVM R² Score: 0.075
-Best SVM Params: {'C': 17.43646535077721, 'epsilon': 0.4010606075732408, 'gamma': 'auto'}
-
---- Support Vector Regression (2025-04-25 14:46) ---
+--- Support Vector Regression (2025-05-24 11:11) ---
 SVM MAE: 0.77
 SVM R² Score: 0.735
 Best SVM Params: {'C': 37.55401188473625, 'epsilon': 0.9607143064099162, 'gamma': 'scale'}
 
---- Uni Prophet Regression (Tuned) (2025-04-25 15:16) ---
-Uni Prophet MAE: 7.07
-Uni Prophet R² Score: -18.267
-Best Parameters: {'seasonality_prior_scale': 5.0, 'seasonality_mode': 'additive', 'changepoint_prior_scale': 0.1}
+--- XGBoost Regression (2025-05-24 11:11) ---
+XGBoost MAE: 0.97
+XGBoost R² Score: 0.590
 
---- Uni Prophet Regression (2025-04-25 15:16) ---
-Uni Prophet MAE: 2.75
-Uni Prophet R² Score: -2.879
-
---- Multi Prophet (2025-04-25 15:18) ---
-Multi Prophet MAE: 0.64
-Multi Prophet R² Score: 0.803
-Best Parameters: {'seasonality_prior_scale': 5.0, 'seasonality_mode': 'additive', 'changepoint_prior_scale': 0.001}
-
---- Multi Prophet (Tuned) (2025-04-25 15:22) ---
-Multi Prophet MAE: 0.64
-Multi Prophet R² Score: 0.803
-Best Parameters: {'seasonality_prior_scale': 5.0, 'seasonality_mode': 'additive', 'changepoint_prior_scale': 0.001}
-
---- Multi Prophet (Tuned) (2025-05-23 14:17) ---
-Multi Prophet MAE: 0.64
-Multi Prophet R² Score: 0.803
-Best Parameters: {'seasonality_prior_scale': 5.0, 'seasonality_mode': 'additive', 'changepoint_prior_scale': 0.001}
-
---- Uni Prophet Regression (Tuned) (2025-05-23 14:17) ---
-Uni Prophet MAE: 7.07
-Uni Prophet R² Score: -18.267
-Best Parameters: {'seasonality_prior_scale': 5.0, 'seasonality_mode': 'additive', 'changepoint_prior_scale': 0.1}
+--- XGBoost Regression (2025-05-24 11:11) ---
+XGBoost MAE: 0.92
+XGBoost R² Score: 0.692
+Best Parameters: {'subsample': 0.7, 'reg_lambda': 1.0, 'reg_alpha': 0, 'n_estimators': 300, 'max_depth': 5, 'learning_rate': 0.05, 'gamma': 1, 'colsample_bytree': 0.6}

@@ -13,7 +13,7 @@ from sklearn.svm import SVR
 from sklearn.metrics import mean_absolute_error, r2_score
 from scipy.stats import uniform
 
-def run_svm_regression(filepath='data/processed/processed.csv', target='Gulf'):
+def run_svm_regression_tuned(filepath='data/processed/processed.csv', target='Gulf'):
     df = pd.read_csv(filepath)
     df['date'] = pd.to_datetime(df['date'])
 
@@ -79,10 +79,8 @@ def run_svm_regression(filepath='data/processed/processed.csv', target='Gulf'):
         f.write(f'Best SVM Params: {search.best_params_}\n')
 
     # Save plot
-    plot_path = os.path.join(results_dir, f'{target}_svm_prediction_plot.png')
+    plot_path = os.path.join(results_dir, f'{target}_svm_prediction_plot_(tuned).png')
     plt.savefig(plot_path)
     plt.close()
 
     return model
-
-run_svm_regression()

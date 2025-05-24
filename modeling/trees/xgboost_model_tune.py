@@ -12,7 +12,7 @@ from sklearn.metrics import mean_absolute_error, r2_score
 from xgboost import XGBRegressor
 from sklearn.model_selection import train_test_split, RandomizedSearchCV
 
-def run_xgboost_model(filepath='data/processed/processed.csv', target='Gulf'):
+def run_xgboost_model_tuned(filepath='data/processed/processed.csv', target='Gulf'):
     df = pd.read_csv(filepath)
     df['date'] = pd.to_datetime(df['date'])
 
@@ -75,7 +75,7 @@ def run_xgboost_model(filepath='data/processed/processed.csv', target='Gulf'):
     results_dir = 'reports/models'
     os.makedirs(results_dir, exist_ok=True)
 
-    plot_path = os.path.join(results_dir, f'{target}_xgboost_prediction_plot.png')
+    plot_path = os.path.join(results_dir, f'{target}_xgboost_prediction_plot_(tuned).png')
     plt.savefig(plot_path)
     plt.close()
 
@@ -87,5 +87,3 @@ def run_xgboost_model(filepath='data/processed/processed.csv', target='Gulf'):
         f.write(f'Best Parameters: {search.best_params_}\n')
 
     return model
-
-run_xgboost_model()
