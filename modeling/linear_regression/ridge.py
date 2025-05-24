@@ -79,3 +79,5 @@ def run_ridge_regression(filepath='data/processed/processed.csv', target='Gulf')
         f.write(f'Ridge R² Score: {r2:.3f}\n')
 
     return model
+
+run_ridge_regression()

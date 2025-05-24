@@ -69,3 +69,4 @@ def run_prophet_model(filepath='data/processed/processed.csv', target='Gulf'):
 
     return forecast
 
+run_prophet_model()
