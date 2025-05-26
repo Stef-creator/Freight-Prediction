@@ -5,9 +5,19 @@ sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 
 import pandas as pd
 import os
-from feature_engineering.generate_volatility import compute_bpi_volatility
+
 
 def load_dataset(name, parse_date_col='date'):
+    """
+    Load a processed CSV file from the data/processed folder.
+
+    Args:
+        name (str): Name of the dataset (without .csv)
+        parse_date_col (str): Column to parse as datetime
+
+    Returns:
+        pd.DataFrame
+    """
     path = f'data/processed/{name}.csv'
     if not os.path.exists(path):
         raise FileNotFoundError(f'{path} not found. Run fetch first.')
@@ -16,7 +26,14 @@ def load_dataset(name, parse_date_col='date'):
 
 
 def load_all_data():
-    # Load datasets
+    """
+    Load all processed datasets, resample to weekly Mondays,
+    forward-fill where needed, and merge into one dataframe.
+
+    Returns:
+        pd.DataFrame: Merged dataset saved to data/processed/all_data.csv
+    """
+    # Load individual datasets
     anchored = load_dataset('anchored')
     bpi = load_dataset('bpi')
     brent = load_dataset('brent')
@@ -28,8 +45,7 @@ def load_all_data():
     waiting = load_dataset('waiting')
     wheat = load_dataset('wheat')
 
-    #bpi_volatility = compute_bpi_volatility()
-
+    # Resample to weekly frequency
     bpi = bpi.set_index('date').resample('W-MON').mean().reset_index()
     brent = brent.set_index('date').resample('W-MON').mean().reset_index()
     corn = corn.set_index('date').resample('W-MON').mean().reset_index()
@@ -44,23 +60,27 @@ def load_all_data():
 
     targets = targets.set_index('date').resample('W-MON').ffill().reset_index()
 
-
-    # Merge all on 'date'
-    df = anchored \
-        .merge(brent, on='date', how='outer') \
-        .merge(bpi, on='date', how='outer') \
-        .merge(capacity, on='date', how='outer') \
-        .merge(corn, on='date', how='outer') \
-        .merge(gscpi, on='date', how='outer') \
-        .merge(targets, on='date', how='outer') \
-        .merge(tvol, on='date', how='outer') \
-        .merge(waiting, on='date', how='outer')\
+    # Merge all datasets on 'date'
+    df = (
+        anchored
+        .merge(brent, on='date', how='outer')
+        .merge(bpi, on='date', how='outer')
+        .merge(capacity, on='date', how='outer')
+        .merge(corn, on='date', how='outer')
+        .merge(gscpi, on='date', how='outer')
+        .merge(targets, on='date', how='outer')
+        .merge(tvol, on='date', how='outer')
+        .merge(waiting, on='date', how='outer')
         .merge(wheat, on='date', how='outer')
+    )
 
-    # Sort and reset index
+    # Final sort and save
     df = df.sort_values('date').reset_index(drop=True)
     df.to_csv('data/processed/all_data.csv', index=False)
-    print('✅ All datasets merged!')
+    print('✅ All datasets merged and saved to data/processed/all_data.csv')
 
     return df
 
+
+if __name__ == '__main__':
+    load_all_data()

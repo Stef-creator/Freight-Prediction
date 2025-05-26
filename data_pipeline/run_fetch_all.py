@@ -1,8 +1,10 @@
 import sys
 import os
 
+# Add parent directory to sys.path so imports work when running as a script
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 
+# Individual fetch functions
 from data_pipeline.fetch_bpi import fetch_bpi
 from data_pipeline.fetch_brent import fetch_brent
 from data_pipeline.fetch_commodities import fetch_wheat, fetch_corn
@@ -13,31 +15,54 @@ from data_pipeline.fetch_trade_vol import fetch_tvol
 
 
 def fetch_all():
-    
+    """
+    Run all data fetch scripts and save cleaned outputs to `data/processed/`.
+
+    This function orchestrates the loading, cleaning, and saving of all relevant
+    data sources needed for the freight prediction pipeline. Each source is read
+    from its raw format (CSV, Excel, UTF-16, etc.) and exported as a clean, 
+    standardized `.csv` file for downstream processing.
+
+    Datasets fetched:
+    - BPI (Baltic Panamax Index)
+    - Brent crude oil prices
+    - U.S. agricultural commodities (corn, wheat)
+    - Port congestion metrics (anchored ships, waiting ships, containership capacity)
+    - Global Supply Chain Pressure Index (GSCPI)
+    - U.S. Gulf and Pacific Northwest freight targets
+    - Global trade volume (CPB)
+
+    Returns:
+        None
+    """
+    print('📦 Fetching all raw data sources...\n')
+
+    print('🔹 Fetching BPI...')
     fetch_bpi()
-    print('Fetching BPI...')
 
+    print('🔹 Fetching Brent...')
     fetch_brent()
-    print('Fetching Brent...')
-    
-    fetch_wheat(), fetch_corn()
-    print('Fetching Commodities...')
 
-    fetch_anchored(), fetch_awaiting(), fetch_capacity() 
-    print('Fetching Congestion measures...')
+    print('🔹 Fetching Commodities...')
+    fetch_wheat()
+    fetch_corn()
 
+    print('🔹 Fetching Port Congestion Metrics...')
+    fetch_anchored()
+    fetch_awaiting()
+    fetch_capacity()
+
+    print('🔹 Fetching GSCPI...')
     fetch_gscpi()
-    print('Fetching GSCPI...')
 
+    print('🔹 Fetching Targets (Gulf & PNW)...')
     fetch_targets()
-    print('Fetching targets...')
 
+    print('🔹 Fetching Trade Volume...')
     fetch_tvol()
-    print('Fetching Trade Volume...')
 
-    print('✅ All datasets fetched and saved!')
-    
-    return None
+    print('\n✅ All datasets fetched and saved to data/processed/')
+
 
 if __name__ == '__main__':
     fetch_all()
