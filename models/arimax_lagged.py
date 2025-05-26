@@ -1,6 +1,7 @@
 import sys
 import os
 import datetime
+import joblib
 
 # Add root path to sys.path for relative imports
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
@@ -17,26 +18,27 @@ warnings.filterwarnings('ignore')
 
 def run_arimax_lagged_exog(filepath='data/processed/processed.csv', target='Gulf'):
     """
-    Run an ARIMAX model using lagged exogenous variables to predict the target time series.
+    Train and evaluate an ARIMAX model with 1-week lagged exogenous regressors for forecasting.
 
-    This function performs the following steps:
-    1. Loads a processed dataset and selects specific exogenous regressors
-    2. Lags all exogenous variables by 1 week
-    3. Splits data into training and test sets
-    4. Uses auto_arima to find optimal ARIMA(p,d,q) parameters
-    5. Fits a SARIMAX model to the full dataset
-    6. Generates in-sample predictions
-    7. Evaluates performance on the test set (MAE and R²)
-    8. Saves the prediction plot and logs the metrics
+    Steps:
+    1. Load processed dataset selecting target and specific exogenous variables.
+    2. Lag all exogenous variables by one week to avoid contemporaneous leakage.
+    3. Perform time-aware train/test split (80/20).
+    4. Use auto_arima to select optimal ARIMA(p,d,q) parameters on training data.
+    5. Fit SARIMAX model on full data with selected order and lagged exog.
+    6. Generate in-sample predictions.
+    7. Evaluate performance on test set with MAE and R².
+    8. Save prediction plot and append results to log file.
 
     Args:
-        filepath (str): Path to the processed dataset CSV.
-        target (str): Name of the target column to forecast (e.g., 'Gulf').
+        filepath (str): Path to processed dataset CSV.
+        target (str): Target column name.
 
     Returns:
-        results: Fitted SARIMAX model results object
+        results: SARIMAX fitted results object.
     """
-    # === Load and prepare data ===
+
+    #  Load and prepare data 
     df = pd.read_csv(filepath)
     df['date'] = pd.to_datetime(df['date'])
 
@@ -44,17 +46,16 @@ def run_arimax_lagged_exog(filepath='data/processed/processed.csv', target='Gulf
     df = df[['date', target] + exog_vars].dropna()
     df = df.rename(columns={'date': 'ds', target: 'y'})
 
-    # === Lag exogenous variables by 1 week ===
+    #  Lag exogenous variables by 1 week 
     for col in exog_vars:
         df[col] = df[col].shift(1)
     df = df.dropna().reset_index(drop=True)
 
-    # === Train/Test Split ===
+    #  Train/Test Split (80/20) 
     split_idx = int(len(df) * 0.8)
     train, test = df.iloc[:split_idx], df.iloc[split_idx:]
 
-    # === Auto ARIMA to find optimal (p,d,q) ===
-    print('Selecting best ARIMA order using auto_arima...')
+    #  Auto ARIMA for order selection 
     auto_model = auto_arima(
         train['y'],
         exogenous=train[exog_vars],
@@ -64,45 +65,51 @@ def run_arimax_lagged_exog(filepath='data/processed/processed.csv', target='Gulf
         trace=True
     )
     best_order = auto_model.order
-    print(f'Best ARIMA Order: {best_order}')
 
-    # === Fit SARIMAX on full dataset ===
+    #  Fit SARIMAX model 
     model = SARIMAX(df['y'], exog=df[exog_vars], order=best_order)
     results = model.fit(disp=False)
 
-    # === Full prediction ===
+    #  Predict full sample 
     df['predicted'] = results.predict(start=0, end=len(df) - 1, exog=df[exog_vars])
 
-    # === Evaluation on test set ===
+    #  Evaluate test set 
     test_compare = df.iloc[split_idx:]
     mae = mean_absolute_error(test_compare['y'], test_compare['predicted'])
     r2 = r2_score(test_compare['y'], test_compare['predicted'])
 
-    print(f'\n📊 Evaluation on Test Set:')
-    print(f'MAE: {mae:.2f}')
-    print(f'R² Score: {r2:.3f}')
-
-    # === Plot prediction ===
+    #  Plot actual vs predicted 
     plt.figure(figsize=(12, 5))
     plt.plot(df['ds'], df['y'], label='Actual', linewidth=2)
     plt.plot(df['ds'], df['predicted'], label='Predicted', linestyle='--')
     plt.axvline(df['ds'].iloc[split_idx], color='red', linestyle=':', label='Train/Test Split')
-    plt.title(f'ARIMAX (Lagged Exog): Prediction for {target}')
+    plt.title(f'ARIMAX (Lagged Exog): Actual vs Predicted {target}')
     plt.xlabel('Date')
     plt.ylabel(f'{target} Price')
     plt.legend()
     plt.grid(True)
     plt.tight_layout()
 
-    # === Save outputs ===
-    results_dir = 'reports/models'
-    os.makedirs(results_dir, exist_ok=True)
+    #  Define directories 
+    plots_dir = 'reports/plots'
+    models_dir = 'reports/models_saved'
+    metrics_dir = 'reports/models'
 
-    plot_path = os.path.join(results_dir, f'{target}_arimax_lagged_prediction_plot.png')
+    os.makedirs(plots_dir, exist_ok=True)
+    os.makedirs(models_dir, exist_ok=True)
+    os.makedirs(metrics_dir, exist_ok=True)
+
+    # Save prediction plot
+    plot_path = os.path.join(plots_dir, f'{target}_arimax_lagged_prediction_plot.png')
     plt.savefig(plot_path)
     plt.close()
 
-    with open(os.path.join(results_dir, 'model_results.txt'), 'a') as f:
+    # Save the trained model 
+    model_path = os.path.join(models_dir, f'{target}_arimax_lagged_model.joblib')
+    joblib.dump(model, model_path)
+
+    # Save metrics
+    with open(os.path.join(metrics_dir, 'model_results.txt'), 'a') as f:
         f.write(f'\n--- ARIMAX Lagged ({datetime.datetime.now().strftime("%Y-%m-%d %H:%M")}) ---\n')
         f.write(f'Best ARIMA Order: {best_order}\n')
         f.write(f'ARIMAX Lagged MAE: {mae:.2f}\n')

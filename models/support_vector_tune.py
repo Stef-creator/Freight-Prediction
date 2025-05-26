@@ -1,6 +1,7 @@
 import sys
 import os
 import datetime
+import joblib 
 
 # Add root directory to import path
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
@@ -29,7 +30,7 @@ def run_svm_regression_tuned(filepath='data/processed/processed.csv', target='Gu
     4. Scale features using StandardScaler
     5. Tune SVR using randomized search over hyperparameters
     6. Evaluate model performance on the test set using MAE and R²
-    7. Save plots and results to disk
+    7. Save plots, metrics, and trained model to disk
 
     Args:
         filepath (str): Path to processed input dataset (CSV)
@@ -39,14 +40,14 @@ def run_svm_regression_tuned(filepath='data/processed/processed.csv', target='Gu
         sklearn.svm.SVR: Trained SVR model with best parameters
     """
 
-    # === Load and clean data ===
+    # Load and preprocess data
     df = pd.read_csv(filepath)
     df['date'] = pd.to_datetime(df['date'])
 
-    # Shift target forward by one week
+    # Shift target forward 1 week to predict next week
     df[f'{target}_target'] = df[target].shift(-1)
 
-    # Drop features that are highly collinear or redundant for this model
+    # Drop columns redundant or highly collinear with SVR
     drop_cols = [
         'date', target, 'ship_cap', 'gscpi', 'trade_vol', 'ships_waiting',
         'bpi_volatility', 'wheat_price', 'brent_price_trend',
@@ -58,20 +59,20 @@ def run_svm_regression_tuned(filepath='data/processed/processed.csv', target='Gu
     X = df.drop(columns=[f'{target}_target'])
     y = df[f'{target}_target']
 
-    # === Time-aware train/test split ===
+    # Time-series aware train/test split (80/20)
     split_idx = int(len(df) * 0.8)
     X_train, X_test = X.iloc[:split_idx], X.iloc[split_idx:]
     y_train, y_test = y.iloc[:split_idx], y.iloc[split_idx:]
 
-    # === Scale input features ===
+    # Scale features to zero mean, unit variance
     scaler = StandardScaler()
     X_train_scaled = scaler.fit_transform(X_train)
     X_test_scaled = scaler.transform(X_test)
 
-    # === Randomized hyperparameter search for SVR ===
+    # Hyperparameter search space for SVR
     param_dist = {
         'C': uniform(0.1, 100),         # Regularization strength
-        'epsilon': uniform(0.01, 1.0),  # Epsilon-insensitive tube width
+        'epsilon': uniform(0.01, 1.0),  # Tube width
         'gamma': ['scale', 'auto']      # Kernel coefficient
     }
 
@@ -89,7 +90,7 @@ def run_svm_regression_tuned(filepath='data/processed/processed.csv', target='Gu
     search.fit(X_train_scaled, y_train)
     model = search.best_estimator_
 
-    # === Evaluate model ===
+    # Model evaluation
     y_pred = model.predict(X_test_scaled)
     mae = mean_absolute_error(y_test, y_pred)
     r2 = r2_score(y_test, y_pred)
@@ -98,7 +99,7 @@ def run_svm_regression_tuned(filepath='data/processed/processed.csv', target='Gu
     print(f'SVM R² Score: {r2:.3f}')
     print(f'Best SVM Params: {search.best_params_}')
 
-    # === Plot predictions ===
+    # Plot actual vs predicted
     plt.figure(figsize=(12, 5))
     plt.plot(y_test.values, label='Actual', linewidth=2)
     plt.plot(y_pred, label='Predicted', linestyle='--')
@@ -109,20 +110,30 @@ def run_svm_regression_tuned(filepath='data/processed/processed.csv', target='Gu
     plt.grid(True)
     plt.tight_layout()
 
-    # === Save results ===
-    results_dir = 'reports/models'
-    os.makedirs(results_dir, exist_ok=True)
+    # Define directories
+    plots_dir = 'reports/plots'
+    models_dir = 'reports/models_saved'
+    metrics_dir = 'reports/models'
+
+    os.makedirs(plots_dir, exist_ok=True)
+    os.makedirs(models_dir, exist_ok=True)
+    os.makedirs(metrics_dir, exist_ok=True)
+
+    # Save prediction plot
+    plot_path = os.path.join(plots_dir, f'{target}_svm_prediction_plot_tuned.png')
+    plt.savefig(plot_path)
+    plt.close()
 
     # Save evaluation metrics
-    with open(os.path.join(results_dir, 'model_results.txt'), 'a') as f:
+    with open(os.path.join(metrics_dir, 'model_results.txt'), 'a') as f:
         f.write(f'\n--- Support Vector Regression ({datetime.datetime.now().strftime("%Y-%m-%d %H:%M")}) ---\n')
         f.write(f'SVM MAE: {mae:.2f}\n')
         f.write(f'SVM R² Score: {r2:.3f}\n')
         f.write(f'Best SVM Params: {search.best_params_}\n')
 
-    # Save prediction plot
-    plot_path = os.path.join(results_dir, f'{target}_svm_prediction_plot_tuned.png')
-    plt.savefig(plot_path)
-    plt.close()
+    # Save trained model for reuse
+    model_path = os.path.join(models_dir, f'{target}_svm_model.joblib')
+    joblib.dump(model, model_path)
+    print(f'Model saved to {model_path}')
 
     return model

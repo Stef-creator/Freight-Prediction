@@ -1,6 +1,7 @@
 import sys
 import os
 import datetime
+import joblib
 
 # Add project root to sys.path
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
@@ -19,90 +20,99 @@ warnings.filterwarnings('ignore')
 
 def run_lasso_with_lags(filepath='data/processed/processed.csv', target='Gulf', max_lag=5, showplot=True):
     """
-    Run Lasso Regression with lagged features to forecast a time series target.
+    Train and evaluate a Lasso regression model using lagged features for 1-week-ahead forecasting.
 
-    This model applies L1-regularized regression (Lasso) using lagged versions
-    of all predictors in the dataset. It performs time-aware cross-validation,
-    selects the optimal regularization parameter, and evaluates model performance
-    on a holdout test set.
+    This function:
+    1. Loads processed data and generates lagged features for all predictors.
+    2. Perform time-aware train/test split (80/20)
+    3. Scales features using StandardScaler.
+    4. Trains LassoCV with TimeSeriesSplit cross-validation.
+    5. Evaluates model on test set with MAE and R².
+    6. Saves coefficient summary, prediction plots, and metrics.
 
     Args:
-        filepath (str): Path to the input processed dataset.
-        target (str): Name of the target column to forecast.
-        max_lag (int): Number of lags to generate for all non-date columns.
-        showplot (bool): Whether to generate and save coefficient and prediction plots.
+        filepath (str): Path to processed dataset CSV.
+        target (str): Target variable column name.
+        max_lag (int): Number of lag periods to create for all predictors.
+        showplot (bool): Whether to generate and save plots.
 
     Returns:
-        lasso (LassoCV): Trained LassoCV model.
-        coef_df (pd.DataFrame): DataFrame of feature names and their corresponding coefficients.
+        lasso (LassoCV): Trained LassoCV model object.
+        coef_df (pd.DataFrame): DataFrame of feature names and coefficients sorted by absolute value.
     """
-    # === Load and preprocess ===
+
+    #  Load and preprocess data 
     df = pd.read_csv(filepath)
     df['date'] = pd.to_datetime(df['date'])
 
-    # Generate lag features for all variables except date
+    # Generate lagged features
     lag_features = df.columns.difference(['date'])
     lagged_dfs = []
     for lag in range(1, max_lag + 1):
         lagged = df[lag_features].shift(lag).add_suffix(f'_lag{lag}')
         lagged_dfs.append(lagged)
 
-    # Combine original with lagged data
+    # Combine original and lagged features
     df = pd.concat([df] + lagged_dfs, axis=1)
     df[f'{target}_target'] = df[target]
     df = df.dropna()
 
-    # Feature/target split
+    # Split into predictors and target
     X = df[[col for col in df.columns if '_lag' in col]]
     y = df[f'{target}_target']
 
-    # === Time-series train/test split ===
+    #  Time-aware train/test split 
     split_idx = int(len(df) * 0.8)
     X_train, X_test = X.iloc[:split_idx], X.iloc[split_idx:]
     y_train, y_test = y.iloc[:split_idx], y.iloc[split_idx:]
 
-    # === Scale predictors ===
+    #  Scale predictors 
     scaler = StandardScaler()
     X_train_scaled = scaler.fit_transform(X_train)
     X_test_scaled = scaler.transform(X_test)
 
-    # === Fit Lasso with TimeSeriesSplit CV ===
-    lasso = LassoCV(cv=TimeSeriesSplit(n_splits=5), random_state=42)
-    lasso.fit(X_train_scaled, y_train)
+    #  Train LassoCV model 
+    model = LassoCV(cv=TimeSeriesSplit(n_splits=5), random_state=42)
+    model.fit(X_train_scaled, y_train)
 
-    # === Evaluate ===
-    y_pred = lasso.predict(X_test_scaled)
+    #  Predict and evaluate 
+    y_pred = model.predict(X_test_scaled)
     mae = mean_absolute_error(y_test, y_pred)
     r2 = r2_score(y_test, y_pred)
 
     print(f'Lasso Test MAE: {mae:.2f}')
     print(f'R² Score: {r2:.3f}')
-    print(f'Selected Alpha: {lasso.alpha_:.4f}')
+    print(f'Selected Alpha: {model.alpha_:.4f}')
 
-    # === Coefficient summary ===
+    #  Create coefficient summary DataFrame 
     coef_df = pd.DataFrame({
         'Feature': X.columns,
-        'Coefficient': lasso.coef_
+        'Coefficient': model.coef_
     }).sort_values(by='Coefficient', key=abs, ascending=False)
 
     print('\nTop Lasso Coefficients:')
     print(coef_df.head(20))
 
-    # === Save outputs ===
-    results_dir = 'reports/models'
-    os.makedirs(results_dir, exist_ok=True)
+    #  Define directories 
+    plots_dir = 'reports/plots'
+    models_dir = 'reports/models_saved'
+    metrics_dir = 'reports/models'
+
+    os.makedirs(plots_dir, exist_ok=True)
+    os.makedirs(models_dir, exist_ok=True)
+    os.makedirs(metrics_dir, exist_ok=True)
 
     if showplot:
-        # Coefficient plot
+        # Plot top coefficients
         plt.figure(figsize=(10, 5))
         sns.barplot(data=coef_df.head(20), x='Coefficient', y='Feature', orient='h')
         plt.title(f'Top Lasso Coefficients for {target}')
         plt.grid(True)
         plt.tight_layout()
-        plt.savefig(os.path.join(results_dir, f'Lasso_Coefficients_{target}.png'))
+        plt.savefig(os.path.join(plots_dir, f'Lasso_Coefficients_{target}.png'))
         plt.close()
 
-        # Prediction plot
+        # Plot actual vs predicted
         plt.figure(figsize=(12, 4))
         plt.plot(y_test.values, label='Actual', linewidth=2)
         plt.plot(y_pred, label='Predicted', linestyle='--')
@@ -112,14 +122,19 @@ def run_lasso_with_lags(filepath='data/processed/processed.csv', target='Gulf', 
         plt.legend()
         plt.grid(True)
         plt.tight_layout()
-        plt.savefig(os.path.join(results_dir, f'{target}_lasso_prediction_plot.png'))
+        plt.savefig(os.path.join(plots_dir, f'{target}_lasso_prediction_lagged_plot.png'))
         plt.close()
+ 
+    #  Save the trained model 
+    model_path = os.path.join(models_dir, f'{target}_lasso_lagged_model.joblib')
+    joblib.dump(model, model_path)
 
-    # === Save evaluation metrics ===
-    with open(os.path.join(results_dir, 'model_results.txt'), 'a') as f:
+    # Save metrics
+    with open(os.path.join(metrics_dir, 'model_results.txt'), 'a') as f:
+        f.write(f'Selected Alpha: {model.alpha_:.4f}\n')
         f.write(f'\n--- Lasso Regression with Lags ({datetime.datetime.now().strftime("%Y-%m-%d %H:%M")}) ---\n')
         f.write(f'Lasso MAE: {mae:.2f}\n')
         f.write(f'Lasso R² Score: {r2:.3f}\n')
-        f.write(f'Selected Alpha: {lasso.alpha_:.4f}\n')
 
-    return lasso, coef_df
+
+    return model, coef_df

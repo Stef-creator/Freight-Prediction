@@ -1,7 +1,9 @@
 import sys
 import os
 import datetime
+import joblib  
 
+# Add root directory to import path
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 
 import pandas as pd
@@ -22,11 +24,11 @@ def run_xgboost_model_tuned(filepath='data/processed/processed.csv', target='Gul
     Steps:
     1. Load processed dataset and shift the target variable 1 week forward
     2. Drop redundant or highly collinear columns
-    3. Perform time-aware train/test split
+    3. Perform time-aware train/test split (80/20)
     4. Scale features using StandardScaler
     5. Tune hyperparameters via RandomizedSearchCV
     6. Train final model and evaluate with MAE and R² metrics
-    7. Save results and prediction plot to 'reports/models/'
+    7. Save results, prediction plot, and trained model to disk
 
     Args:
         filepath (str): Path to the input CSV file
@@ -35,7 +37,7 @@ def run_xgboost_model_tuned(filepath='data/processed/processed.csv', target='Gul
     Returns:
         XGBRegressor: Trained and tuned XGBoost model
     """
-    # === Load and prepare data ===
+    #  Load and prepare data 
     df = pd.read_csv(filepath)
     df['date'] = pd.to_datetime(df['date'])
 
@@ -50,17 +52,17 @@ def run_xgboost_model_tuned(filepath='data/processed/processed.csv', target='Gul
     X = df.drop(columns=[f'{target}_target'])
     y = df[f'{target}_target']
 
-    # === Time-aware train/test split ===
+    #  Time-aware train/test split 
     split_idx = int(len(df) * 0.8)
     X_train, X_test = X.iloc[:split_idx], X.iloc[split_idx:]
     y_train, y_test = y.iloc[:split_idx], y.iloc[split_idx:]
 
-    # === Scale ===
+    #  Scale 
     scaler = StandardScaler()
     X_train_scaled = scaler.fit_transform(X_train)
     X_test_scaled = scaler.transform(X_test)
 
-    # === Hyperparameter tuning ===
+    #  Hyperparameter tuning 
     param_dist = {
         'n_estimators': [100, 200, 300, 400],
         'learning_rate': [0.01, 0.05, 0.1, 0.2],
@@ -86,7 +88,7 @@ def run_xgboost_model_tuned(filepath='data/processed/processed.csv', target='Gul
     search.fit(X_train_scaled, y_train)
     best_model = search.best_estimator_
 
-    # === Evaluation ===
+    #  Evaluation 
     y_pred = best_model.predict(X_test_scaled)
     mae = mean_absolute_error(y_test, y_pred)
     r2 = r2_score(y_test, y_pred)
@@ -95,7 +97,7 @@ def run_xgboost_model_tuned(filepath='data/processed/processed.csv', target='Gul
     print(f'XGBoost R² Score: {r2:.3f}')
     print('Best Parameters:', search.best_params_)
 
-    # === Plot predictions ===
+    #  Plot predictions 
     plt.figure(figsize=(12, 5))
     plt.plot(y_test.values, label='Actual', linewidth=2)
     plt.plot(y_pred, label='Predicted', linestyle='--')
@@ -106,18 +108,30 @@ def run_xgboost_model_tuned(filepath='data/processed/processed.csv', target='Gul
     plt.grid(True)
     plt.tight_layout()
 
-    # === Save outputs ===
-    results_dir = 'reports/models'
-    os.makedirs(results_dir, exist_ok=True)
+    # Define directories
+    plots_dir = 'reports/plots'
+    metrics_dir = 'reports/models'
+    models_dir = 'reports/models_saved'
 
-    with open(os.path.join(results_dir, 'model_results.txt'), 'a') as f:
+    os.makedirs(plots_dir, exist_ok=True)
+    os.makedirs(metrics_dir, exist_ok=True)
+    os.makedirs(models_dir, exist_ok=True)
+
+    # Save prediction plot
+    plot_path = os.path.join(plots_dir, f'{target}_xgboost_prediction_plot_tuned.png')
+    plt.savefig(plot_path)
+    plt.close()
+
+    # Save evaluation metrics
+    with open(os.path.join(metrics_dir, 'model_results.txt'), 'a') as f:
         f.write(f'\n--- XGBoost Regression ({datetime.datetime.now().strftime("%Y-%m-%d %H:%M")}) ---\n')
         f.write(f'XGBoost MAE: {mae:.2f}\n')
         f.write(f'XGBoost R² Score: {r2:.3f}\n')
         f.write(f'Best Parameters: {search.best_params_}\n')
 
-    plot_path = os.path.join(results_dir, f'{target}_xgboost_prediction_plot_tuned.png')
-    plt.savefig(plot_path)
-    plt.close()
+    # Save trained model to disk
+    model_path = os.path.join(models_dir, f'{target}_xgboost_model.joblib')
+    joblib.dump(best_model, model_path)
+    print(f'Model saved to {model_path}')
 
     return best_model
