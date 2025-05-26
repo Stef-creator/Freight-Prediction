@@ -131,8 +131,8 @@ def run_lasso_with_lags(filepath='data/processed/processed.csv', target='Gulf', 
 
     # Save metrics
     with open(os.path.join(metrics_dir, 'model_results.txt'), 'a') as f:
-        f.write(f'Selected Alpha: {model.alpha_:.4f}\n')
         f.write(f'\n--- Lasso Regression with Lags ({datetime.datetime.now().strftime("%Y-%m-%d %H:%M")}) ---\n')
+        f.write(f'Selected Alpha: {model.alpha_:.4f}\n')
         f.write(f'Lasso MAE: {mae:.2f}\n')
         f.write(f'Lasso R² Score: {r2:.3f}\n')
 
