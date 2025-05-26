@@ -18,7 +18,7 @@ import warnings
 warnings.filterwarnings('ignore')
 
 
-def run_lasso_with_lags(filepath='data/processed/processed.csv', target='Gulf', max_lag=5, showplot=True):
+def run_lasso_with_lags(filepath='data/processed/processed.csv', target='Gulf', max_lag=5):
     """
     Train and evaluate a Lasso regression model using lagged features for 1-week-ahead forecasting.
 
@@ -102,28 +102,28 @@ def run_lasso_with_lags(filepath='data/processed/processed.csv', target='Gulf', 
     os.makedirs(models_dir, exist_ok=True)
     os.makedirs(metrics_dir, exist_ok=True)
 
-    if showplot:
-        # Plot top coefficients
-        plt.figure(figsize=(10, 5))
-        sns.barplot(data=coef_df.head(20), x='Coefficient', y='Feature', orient='h')
-        plt.title(f'Top Lasso Coefficients for {target}')
-        plt.grid(True)
-        plt.tight_layout()
-        plt.savefig(os.path.join(plots_dir, f'Lasso_Coefficients_{target}.png'))
-        plt.close()
+    
+    # Plot top coefficients
+    plt.figure(figsize=(10, 5))
+    sns.barplot(data=coef_df.head(20), x='Coefficient', y='Feature', orient='h')
+    plt.title(f'Top Lasso Coefficients for {target}')
+    plt.grid(True)
+    plt.tight_layout()
+    plt.savefig(os.path.join(plots_dir, f'Lasso_Coefficients_{target}.png'))
+    plt.close()
 
-        # Plot actual vs predicted
-        plt.figure(figsize=(12, 4))
-        plt.plot(y_test.values, label='Actual', linewidth=2)
-        plt.plot(y_pred, label='Predicted', linestyle='--')
-        plt.title(f'Lasso Regression: Actual vs Predicted {target}')
-        plt.xlabel('Test Sample Index')
-        plt.ylabel(f'{target} Freight Price')
-        plt.legend()
-        plt.grid(True)
-        plt.tight_layout()
-        plt.savefig(os.path.join(plots_dir, f'{target}_lasso_prediction_lagged_plot.png'))
-        plt.close()
+    # Plot actual vs predicted
+    plt.figure(figsize=(12, 4))
+    plt.plot(y_test.values, label='Actual', linewidth=2)
+    plt.plot(y_pred, label='Predicted', linestyle='--')
+    plt.title(f'Lasso Regression: Actual vs Predicted {target}')
+    plt.xlabel('Test Sample Index')
+    plt.ylabel(f'{target} Freight Price')
+    plt.legend()
+    plt.grid(True)
+    plt.tight_layout()
+    plt.savefig(os.path.join(plots_dir, f'{target}_lasso_prediction_lagged_plot.png'))
+    plt.close()
  
     #  Save the trained model 
     model_path = os.path.join(models_dir, f'{target}_lasso_lagged_model.joblib')
