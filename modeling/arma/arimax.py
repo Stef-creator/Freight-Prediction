@@ -15,43 +15,48 @@ warnings.filterwarnings('ignore')
 
 
 def run_arimax_model(filepath='data/processed/processed.csv', target='Gulf'):
+    # === Load and prepare data ===
     df = pd.read_csv(filepath)
     df['date'] = pd.to_datetime(df['date'])
 
-    # --- Prepare dataframe ---
-    exog_features = ['bpi', 'PNW', 'brent_price', 'corn_price', 'ships_anchored']
-    df = df[['date', target] + exog_features].dropna()
+    exog_vars = ['bpi', 'PNW', 'brent_price', 'corn_price', 'ships_anchored']
+    df = df[['date', target] + exog_vars].dropna()
     df = df.rename(columns={'date': 'ds', target: 'y'})
 
-    # --- Train/Test Split ---
+    # === Train/Test Split ===
     split_idx = int(len(df) * 0.8)
-    train = df.iloc[:split_idx]
-    test = df.iloc[split_idx:]
+    train, test = df.iloc[:split_idx], df.iloc[split_idx:]
 
-    # --- Auto ARIMA order selection ---
-    print('Running auto_arima to determine best order...')
-    auto_model = auto_arima(train['y'], exogenous=train[exog_features], seasonal=False,
-                             stepwise=True, suppress_warnings=True, trace=True)
-
+    # === Tune ARIMA order ===
+    print('Selecting best ARIMA order using auto_arima...')
+    auto_model = auto_arima(
+        train['y'],
+        exogenous=train[exog_vars],
+        seasonal=False,
+        stepwise=True,
+        suppress_warnings=True,
+        trace=True
+    )
     best_order = auto_model.order
     print(f'Best ARIMA Order: {best_order}')
 
-    # --- Fit SARIMAX model on full data ---
-    model = SARIMAX(df['y'], exog=df[exog_features], order=best_order)
+    # === Fit SARIMAX on full dataset ===
+    model = SARIMAX(df['y'], exog=df[exog_vars], order=best_order)
     results = model.fit(disp=False)
 
-    # --- Predict full dataset (in-sample) ---
-    forecast = results.predict(start=0, end=len(df) - 1, exog=df[exog_features])
-    df['predicted'] = forecast
+    # === Predict full range ===
+    df['predicted'] = results.predict(start=0, end=len(df) - 1, exog=df[exog_vars])
 
-    # --- Evaluation on test set only ---
+    # === Evaluate on test set ===
     test_compare = df.iloc[split_idx:]
     mae = mean_absolute_error(test_compare['y'], test_compare['predicted'])
     r2 = r2_score(test_compare['y'], test_compare['predicted'])
-    print(f'Mean Absolute Error (MAE) on Test Set: {mae:.2f}')
-    print(f'R² Score on Test Set: {r2:.3f}')
 
-    # --- Plot full predictions ---
+    print(f'\n📊 Evaluation on Test Set:')
+    print(f'MAE: {mae:.2f}')
+    print(f'R² Score: {r2:.3f}')
+
+    # === Plot ===
     plt.figure(figsize=(12, 5))
     plt.plot(df['ds'], df['y'], label='Actual', linewidth=2)
     plt.plot(df['ds'], df['predicted'], label='Predicted', linestyle='--')
@@ -63,6 +68,7 @@ def run_arimax_model(filepath='data/processed/processed.csv', target='Gulf'):
     plt.grid(True)
     plt.tight_layout()
 
+    # === Save outputs ===
     results_dir = 'reports/models'
     os.makedirs(results_dir, exist_ok=True)
 
@@ -70,11 +76,10 @@ def run_arimax_model(filepath='data/processed/processed.csv', target='Gulf'):
     plt.savefig(plot_path)
     plt.close()
 
-    # Save metrics
     with open(os.path.join(results_dir, 'model_results.txt'), 'a') as f:
         f.write(f'\n--- ARIMAX ({datetime.datetime.now().strftime("%Y-%m-%d %H:%M")}) ---\n')
+        f.write(f'Best ARIMA Order: {best_order}\n')
         f.write(f'ARIMAX MAE: {mae:.2f}\n')
         f.write(f'ARIMAX R²: {r2:.3f}\n')
 
     return results
-

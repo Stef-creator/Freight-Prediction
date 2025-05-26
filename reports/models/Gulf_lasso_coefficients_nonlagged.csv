@@ -1,0 +1,16 @@
+Feature,Coefficient
+PNW,6.274386270757847
+bpi,5.849163937296173
+brent_price,0.8746719225534305
+corn_price,-0.5273223074339606
+brent_price_seasonal,-0.28436247813284354
+ships_anchored,-0.26226784454046487
+bpi_seasonal,-0.19238591920881007
+bpi_volatility,0.05568313669640589
+ship_cap,0.0
+gscpi,0.0
+trade_vol,-0.0
+ships_waiting,-0.0
+wheat_price,-0.0
+brent_price_trend,-0.0
+bpi_trend,0.0

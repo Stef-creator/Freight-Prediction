@@ -13,29 +13,40 @@ import warnings
 warnings.filterwarnings('ignore')
 
 def run_auto_arima_model(filepath='data/processed/processed.csv', target='Gulf'):
+    # === Load and prepare data ===
     df = pd.read_csv(filepath)
     df['date'] = pd.to_datetime(df['date'])
-
-    # --- Prepare dataframe ---
     df = df[['date', target]].dropna()
     df = df.rename(columns={'date': 'ds', target: 'y'})
 
-    # --- Train/Test Split ---
+    # === Train/Test Split ===
     split_idx = int(len(df) * 0.8)
-    train = df.iloc[:split_idx]
-    test = df.iloc[split_idx:]
+    train, test = df.iloc[:split_idx], df.iloc[split_idx:]
 
-    # --- Fit auto_arima model ---
-    model = auto_arima(train['y'], seasonal=True, stepwise=True, suppress_warnings=True, trace=True)
-    print(f'Best ARIMA Order: {model.order}')
+    # === Fit Auto ARIMA ===
+    model = auto_arima(
+        train['y'],
+        seasonal=True,
+        stepwise=True,
+        suppress_warnings=True,
+        trace=True,
+        error_action='ignore'
+    )
+    print(f'Best ARIMA Order: {model.order}, Seasonal Order: {model.seasonal_order}')
 
-    # --- Forecast ---
+    # === Forecast ===
     forecast = model.predict(n_periods=len(test))
 
-    # --- Combine and plot ---
+    # === Evaluation ===
     df_compare = test.copy()
     df_compare['predicted'] = forecast
+    mae = mean_absolute_error(df_compare['y'], df_compare['predicted'])
+    r2 = r2_score(df_compare['y'], df_compare['predicted'])
 
+    print(f'Mean Absolute Error (MAE): {mae:.2f}')
+    print(f'R² Score: {r2:.3f}')
+
+    # === Plotting ===
     plt.figure(figsize=(12, 5))
     plt.plot(df['ds'], df['y'], label='Actual', linewidth=2)
     plt.plot(df_compare['ds'], df_compare['predicted'], label='Predicted', linestyle='--')
@@ -47,6 +58,7 @@ def run_auto_arima_model(filepath='data/processed/processed.csv', target='Gulf')
     plt.grid(True)
     plt.tight_layout()
 
+    # === Save Outputs ===
     results_dir = 'reports/models'
     os.makedirs(results_dir, exist_ok=True)
 
@@ -54,17 +66,10 @@ def run_auto_arima_model(filepath='data/processed/processed.csv', target='Gulf')
     plt.savefig(plot_path)
     plt.close()
 
-    # --- Evaluation ---
-    mae = mean_absolute_error(df_compare['y'], df_compare['predicted'])
-    r2 = r2_score(df_compare['y'], df_compare['predicted'])
-    print(f'Mean Absolute Error (MAE) on Test Set: {mae:.2f}')
-    print(f'R² Score on Test Set: {r2:.3f}')
-
-    # Save metrics
     with open(os.path.join(results_dir, 'model_results.txt'), 'a') as f:
         f.write(f'\n--- Auto ARIMA ({datetime.datetime.now().strftime("%Y-%m-%d %H:%M")}) ---\n')
+        f.write(f'Best ARIMA Order: {model.order}, Seasonal Order: {model.seasonal_order}\n')
         f.write(f'Auto ARIMA MAE: {mae:.2f}\n')
         f.write(f'Auto ARIMA R²: {r2:.3f}\n')
 
     return model
-
