@@ -2,6 +2,7 @@ import sys
 import os
 import datetime
 
+# Add project root to sys.path
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 
 import pandas as pd
@@ -15,6 +16,25 @@ warnings.filterwarnings('ignore')
 
 
 def run_arimax_model(filepath='data/processed/processed.csv', target='Gulf'):
+    """
+    Run an ARIMAX model using contemporaneous exogenous regressors to forecast the target time series.
+
+    This function performs the following:
+    1. Loads a preprocessed dataset with the specified target and exogenous variables
+    2. Splits the dataset into training and test sets (time-aware)
+    3. Tunes ARIMA hyperparameters using auto_arima on the training set
+    4. Fits a SARIMAX model using the optimal order
+    5. Predicts across the full time range
+    6. Evaluates prediction performance on the test set using MAE and R²
+    7. Saves plot and metrics to the reports folder
+
+    Args:
+        filepath (str): Path to the processed dataset CSV file.
+        target (str): Column name of the target variable (e.g., 'Gulf').
+
+    Returns:
+        results: Fitted SARIMAX model results object
+    """
     # === Load and prepare data ===
     df = pd.read_csv(filepath)
     df['date'] = pd.to_datetime(df['date'])

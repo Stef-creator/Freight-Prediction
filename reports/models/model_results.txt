@@ -1,103 +1,50 @@
 
---- Auto ARIMA (2025-05-26 15:14) ---
+--- Auto ARIMA (2025-05-26 16:23) ---
 Best ARIMA Order: (2, 1, 2), Seasonal Order: (0, 0, 0, 0)
 Auto ARIMA MAE: 1.47
 Auto ARIMA R²: -0.065
 
---- ARIMAX (2025-05-26 15:14) ---
+--- ARIMAX (2025-05-26 16:23) ---
 Best ARIMA Order: (2, 1, 2)
 ARIMAX MAE: 0.50
 ARIMAX R²: 0.903
 
---- ARIMAX Lagged (2025-05-26 15:14) ---
+--- ARIMAX Lagged (2025-05-26 16:23) ---
 Best ARIMA Order: (2, 1, 2)
 ARIMAX Lagged MAE: 0.84
 ARIMAX Lagged R²: 0.710
 
---- Lasso Regression (Non-lagged) (2025-05-26 15:14) ---
+--- Lasso Regression (Non-lagged) (2025-05-26 16:23) ---
 Lasso MAE: 1.36
 Lasso R² Score: 0.348
 Selected Alpha: 0.0809
 
---- Lasso Regression with Lags (2025-05-26 15:14) ---
+--- Lasso Regression with Lags (2025-05-26 16:23) ---
 Lasso MAE: 1.05
 Lasso R² Score: 0.590
 Selected Alpha: 0.0304
 
---- Ridge Regression (2025-05-26 15:14) ---
+--- Ridge Regression (2025-05-26 16:23) ---
 Best Alpha: 0.12649
 Ridge MAE: 1.23
 Ridge R² Score: 0.407
 
---- Uni Prophet Regression (Tuned) (2025-05-26 15:14) ---
+--- Uni Prophet Regression (Tuned) (2025-05-26 16:23) ---
 Uni Prophet MAE: 7.07
 Uni Prophet R² Score: -18.267
 Best Parameters: {'seasonality_prior_scale': 5.0, 'seasonality_mode': 'additive', 'changepoint_prior_scale': 0.1}
 
---- Multi Prophet (Tuned) (2025-05-26 15:14) ---
+--- Multi Prophet (Tuned) (2025-05-26 16:23) ---
 Multi Prophet MAE: 0.64
 Multi Prophet R² Score: 0.803
 Best Parameters: {'seasonality_prior_scale': 5.0, 'seasonality_mode': 'additive', 'changepoint_prior_scale': 0.001}
 
---- Support Vector Regression (2025-05-26 15:14) ---
+--- Support Vector Regression (2025-05-26 16:23) ---
 SVM MAE: 0.79
 SVM R² Score: 0.726
 Best SVM Params: {'C': 2.1584494295802448, 'epsilon': 0.9799098521619943, 'gamma': 'auto'}
 
---- XGBoost Regression (2025-05-26 15:14) ---
-XGBoost MAE: 0.82
-XGBoost R² Score: 0.753
-Best Parameters: {'subsample': 0.7, 'reg_lambda': 1.0, 'reg_alpha': 0, 'n_estimators': 400, 'max_depth': 5, 'learning_rate': 0.2, 'gamma': 0, 'colsample_bytree': 1.0}
-
---- Mean Baseline (2025-05-26 15:15) ---
-Baseline Mean MAE: 4.02
-
---- Auto ARIMA (2025-05-26 16:13) ---
-Best ARIMA Order: (2, 1, 2), Seasonal Order: (0, 0, 0, 0)
-Auto ARIMA MAE: 1.47
-Auto ARIMA R²: -0.065
-
---- ARIMAX (2025-05-26 16:13) ---
-Best ARIMA Order: (2, 1, 2)
-ARIMAX MAE: 0.50
-ARIMAX R²: 0.903
-
---- ARIMAX Lagged (2025-05-26 16:13) ---
-Best ARIMA Order: (2, 1, 2)
-ARIMAX Lagged MAE: 0.84
-ARIMAX Lagged R²: 0.710
-
---- Lasso Regression (Non-lagged) (2025-05-26 16:13) ---
-Lasso MAE: 1.36
-Lasso R² Score: 0.348
-Selected Alpha: 0.0809
-
---- Lasso Regression with Lags (2025-05-26 16:13) ---
-Lasso MAE: 1.05
-Lasso R² Score: 0.590
-Selected Alpha: 0.0304
-
---- Ridge Regression (2025-05-26 16:13) ---
-Best Alpha: 0.12649
-Ridge MAE: 1.23
-Ridge R² Score: 0.407
-
---- Uni Prophet Regression (Tuned) (2025-05-26 16:13) ---
-Uni Prophet MAE: 7.07
-Uni Prophet R² Score: -18.267
-Best Parameters: {'seasonality_prior_scale': 5.0, 'seasonality_mode': 'additive', 'changepoint_prior_scale': 0.1}
-
---- Multi Prophet (Tuned) (2025-05-26 16:13) ---
-Multi Prophet MAE: 0.64
-Multi Prophet R² Score: 0.803
-Best Parameters: {'seasonality_prior_scale': 5.0, 'seasonality_mode': 'additive', 'changepoint_prior_scale': 0.001}
-
---- Support Vector Regression (2025-05-26 16:13) ---
-SVM MAE: 0.79
-SVM R² Score: 0.726
-Best SVM Params: {'C': 2.1584494295802448, 'epsilon': 0.9799098521619943, 'gamma': 'auto'}
-
---- XGBoost Regression (2025-05-26 16:13) ---
+--- XGBoost Regression (2025-05-26 16:23) ---
 XGBoost MAE: 0.82
 XGBoost R² Score: 0.753
 Best Parameters: {'subsample': 0.7, 'reg_lambda': 1.0, 'reg_alpha': 0, 'n_estimators': 400, 'max_depth': 5, 'learning_rate': 0.2, 'gamma': 0, 'colsample_bytree': 1.0}

@@ -2,6 +2,7 @@ import sys
 import os
 import datetime
 
+# Add root directory to sys.path
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 
 import pandas as pd
@@ -15,6 +16,25 @@ warnings.filterwarnings('ignore')
 
 
 def run_prophet_model_tuned(filepath='data/processed/processed.csv', target='Gulf'):
+    """
+    Run a univariate Prophet model on the specified target variable with hyperparameter tuning.
+
+    This script:
+    1. Loads and resamples the dataset to weekly frequency (Mondays)
+    2. Performs time-based train/test split
+    3. Tunes Prophet's hyperparameters using random search over predefined grid
+    4. Evaluates each configuration on test set using MAE
+    5. Selects best model and computes final R² and MAE
+    6. Plots the forecast and saves results to disk
+
+    Args:
+        filepath (str): Path to the processed CSV dataset.
+        target (str): Name of the column to forecast (default='Gulf').
+
+    Returns:
+        pd.DataFrame: Forecasted dataframe containing Prophet predictions.
+    """
+
     # === Load and prepare data ===
     df = pd.read_csv(filepath)
     df['date'] = pd.to_datetime(df['date'])
@@ -25,7 +45,7 @@ def run_prophet_model_tuned(filepath='data/processed/processed.csv', target='Gul
     split_idx = int(len(df) * 0.8)
     train_df, test_df = df.iloc[:split_idx], df.iloc[split_idx:]
 
-    # === Parameter grid for tuning ===
+    # === Hyperparameter tuning grid ===
     param_grid = {
         'changepoint_prior_scale': [0.001, 0.01, 0.1, 0.3],
         'seasonality_prior_scale': [1.0, 5.0, 10.0],
@@ -38,7 +58,7 @@ def run_prophet_model_tuned(filepath='data/processed/processed.csv', target='Gul
     best_params = None
     best_mae = float('inf')
 
-    # === Tuning loop ===
+    # === Search for best parameter combination ===
     for params in param_list:
         model = Prophet(weekly_seasonality=True, yearly_seasonality=False, **params)
         model.fit(train_df)
@@ -48,6 +68,7 @@ def run_prophet_model_tuned(filepath='data/processed/processed.csv', target='Gul
 
         df_compare = df.merge(forecast[['ds', 'yhat']], on='ds', how='left')
         test_compare = df_compare[df_compare['ds'].isin(test_df['ds'])]
+
         mae = mean_absolute_error(test_compare['y'], test_compare['yhat'])
 
         if mae < best_mae:
@@ -56,7 +77,7 @@ def run_prophet_model_tuned(filepath='data/processed/processed.csv', target='Gul
             best_forecast = forecast
             best_params = params
 
-    # === Final evaluation ===
+    # === Final evaluation on best model ===
     df_compare = df.merge(best_forecast[['ds', 'yhat']], on='ds', how='left')
     df_compare.rename(columns={'y': 'actual', 'yhat': 'predicted'}, inplace=True)
     test_compare = df_compare[df_compare['ds'].isin(test_df['ds'])]
@@ -68,7 +89,7 @@ def run_prophet_model_tuned(filepath='data/processed/processed.csv', target='Gul
     print(f'Uni Prophet (Tuned) - R² Score: {final_r2:.3f}')
     print(f'Best Parameters: {best_params}')
 
-    # === Plot forecast ===
+    # === Forecast plot ===
     fig = best_model.plot(best_forecast)
     plt.axvline(df_compare['ds'].iloc[split_idx], color='red', linestyle=':', label='Train/Test Split')
     plt.legend()

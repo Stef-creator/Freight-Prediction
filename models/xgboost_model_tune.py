@@ -16,6 +16,25 @@ warnings.filterwarnings('ignore')
 
 
 def run_xgboost_model_tuned(filepath='data/processed/processed.csv', target='Gulf'):
+    """
+    Train and evaluate a tuned XGBoost regression model for 1-week-ahead freight rate forecasting.
+
+    Steps:
+    1. Load processed dataset and shift the target variable 1 week forward
+    2. Drop redundant or highly collinear columns
+    3. Perform time-aware train/test split
+    4. Scale features using StandardScaler
+    5. Tune hyperparameters via RandomizedSearchCV
+    6. Train final model and evaluate with MAE and R² metrics
+    7. Save results and prediction plot to 'reports/models/'
+
+    Args:
+        filepath (str): Path to the input CSV file
+        target (str): Name of the target column to forecast (default='Gulf')
+
+    Returns:
+        XGBRegressor: Trained and tuned XGBoost model
+    """
     # === Load and prepare data ===
     df = pd.read_csv(filepath)
     df['date'] = pd.to_datetime(df['date'])

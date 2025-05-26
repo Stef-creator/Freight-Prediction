@@ -2,6 +2,7 @@ import sys
 import os
 import datetime
 
+# Add project root to sys.path for relative imports
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 
 import pandas as pd
@@ -12,7 +13,26 @@ from pmdarima import auto_arima
 import warnings
 warnings.filterwarnings('ignore')
 
+
 def run_auto_arima_model(filepath='data/processed/processed.csv', target='Gulf'):
+    """
+    Run an Auto ARIMA model on the specified target variable.
+
+    This function performs the following steps:
+    1. Loads a processed time series dataset
+    2. Splits data into training and test sets
+    3. Automatically selects ARIMA hyperparameters using pmdarima
+    4. Forecasts the test period
+    5. Evaluates the forecast using MAE and R² metrics
+    6. Saves the prediction plot and metrics to the reports directory
+
+    Args:
+        filepath (str): Path to the processed dataset CSV file.
+        target (str): Column name to be predicted (e.g., 'Gulf').
+
+    Returns:
+        model: Fitted pmdarima ARIMA model
+    """
     # === Load and prepare data ===
     df = pd.read_csv(filepath)
     df['date'] = pd.to_datetime(df['date'])

@@ -2,6 +2,7 @@ import sys
 import os
 import datetime
 
+# Ensure project root is in sys.path
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 
 import pandas as pd
@@ -16,10 +17,31 @@ warnings.filterwarnings('ignore')
 
 
 def run_ridge_regression(filepath='data/processed/processed.csv', target='Gulf'):
+    """
+    Run Ridge Regression to forecast 1-week-ahead freight price for the specified target.
+
+    This model:
+    1. Loads and preprocesses time series data
+    2. Shifts target variable by one step forward (y_{t+1})
+    3. Splits data into training and test sets preserving temporal order
+    4. Scales input features
+    5. Fits Ridge regression with cross-validation to select best regularization strength
+    6. Evaluates prediction performance using MAE and R²
+    7. Saves plots and evaluation metrics to disk
+
+    Args:
+        filepath (str): Path to processed dataset.
+        target (str): Column name of the target variable (default='Gulf').
+
+    Returns:
+        sklearn.linear_model.RidgeCV: Trained Ridge regression model.
+    """
+
     # === Load and prepare data ===
     df = pd.read_csv(filepath)
     df['date'] = pd.to_datetime(df['date'])
 
+    # Shift target one week ahead (forecast y_{t+1})
     df[f'{target}_target'] = df[target].shift(-1)
     df = df.drop(columns=['date', target]).dropna()
 
@@ -31,16 +53,17 @@ def run_ridge_regression(filepath='data/processed/processed.csv', target='Gulf')
     X_train, X_test = X.iloc[:split_idx], X.iloc[split_idx:]
     y_train, y_test = y.iloc[:split_idx], y.iloc[split_idx:]
 
-    # === Scale ===
+    # === Scale features ===
     scaler = StandardScaler()
     X_train_scaled = scaler.fit_transform(X_train)
     X_test_scaled = scaler.transform(X_test)
 
-    # === Ridge Regression with Cross-Validation ===
+    # === Fit RidgeCV model with TimeSeriesSplit ===
     alphas = np.logspace(-4, 4, 50)
     model = RidgeCV(alphas=alphas, cv=TimeSeriesSplit(n_splits=5))
     model.fit(X_train_scaled, y_train)
 
+    # === Predict and evaluate ===
     y_pred = model.predict(X_test_scaled)
     mae = mean_absolute_error(y_test, y_pred)
     r2 = r2_score(y_test, y_pred)
@@ -53,9 +76,11 @@ def run_ridge_regression(filepath='data/processed/processed.csv', target='Gulf')
     feature_importance = pd.Series(model.coef_, index=X.columns)
     feature_importance = feature_importance.sort_values(key=np.abs, ascending=False)
 
+    # === Save outputs ===
     results_dir = 'reports/models'
     os.makedirs(results_dir, exist_ok=True)
 
+    # Plot top 20 feature coefficients
     plt.figure(figsize=(10, 6))
     feature_importance.head(20).plot(kind='bar')
     plt.title(f'Ridge Regression: Top Features for {target}')
@@ -65,7 +90,7 @@ def run_ridge_regression(filepath='data/processed/processed.csv', target='Gulf')
     plt.savefig(os.path.join(results_dir, f'Ridge_Coefficients_{target}.png'))
     plt.close()
 
-    # === Prediction plot ===
+    # Plot prediction vs actual
     plt.figure(figsize=(12, 5))
     plt.plot(y_test.values, label='Actual', linewidth=2)
     plt.plot(y_pred, label='Predicted', linestyle='--')
@@ -78,7 +103,7 @@ def run_ridge_regression(filepath='data/processed/processed.csv', target='Gulf')
     plt.savefig(os.path.join(results_dir, f'{target}_ridge_prediction_plot.png'))
     plt.close()
 
-    # === Save metrics ===
+    # Save metrics
     with open(os.path.join(results_dir, 'model_results.txt'), 'a') as f:
         f.write(f'\n--- Ridge Regression ({datetime.datetime.now().strftime("%Y-%m-%d %H:%M")}) ---\n')
         f.write(f'Best Alpha: {model.alpha_:.5f}\n')
@@ -86,5 +111,3 @@ def run_ridge_regression(filepath='data/processed/processed.csv', target='Gulf')
         f.write(f'Ridge R² Score: {r2:.3f}\n')
 
     return model
-
-

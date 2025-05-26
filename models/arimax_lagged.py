@@ -2,6 +2,7 @@ import sys
 import os
 import datetime
 
+# Add root path to sys.path for relative imports
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 
 import pandas as pd
@@ -15,6 +16,26 @@ warnings.filterwarnings('ignore')
 
 
 def run_arimax_lagged_exog(filepath='data/processed/processed.csv', target='Gulf'):
+    """
+    Run an ARIMAX model using lagged exogenous variables to predict the target time series.
+
+    This function performs the following steps:
+    1. Loads a processed dataset and selects specific exogenous regressors
+    2. Lags all exogenous variables by 1 week
+    3. Splits data into training and test sets
+    4. Uses auto_arima to find optimal ARIMA(p,d,q) parameters
+    5. Fits a SARIMAX model to the full dataset
+    6. Generates in-sample predictions
+    7. Evaluates performance on the test set (MAE and R²)
+    8. Saves the prediction plot and logs the metrics
+
+    Args:
+        filepath (str): Path to the processed dataset CSV.
+        target (str): Name of the target column to forecast (e.g., 'Gulf').
+
+    Returns:
+        results: Fitted SARIMAX model results object
+    """
     # === Load and prepare data ===
     df = pd.read_csv(filepath)
     df['date'] = pd.to_datetime(df['date'])
