@@ -127,9 +127,10 @@ def run_svm_regression_tuned(filepath='data/processed/processed.csv', target='Gu
     # Save evaluation metrics
     with open(os.path.join(metrics_dir, 'model_results.txt'), 'a') as f:
         f.write(f'\n--- Support Vector Regression ({datetime.datetime.now().strftime("%Y-%m-%d %H:%M")}) ---\n')
+        f.write(f'Best SVM Params: {search.best_params_}\n')
         f.write(f'SVM MAE: {mae:.2f}\n')
         f.write(f'SVM R² Score: {r2:.3f}\n')
-        f.write(f'Best SVM Params: {search.best_params_}\n')
+        
 
     # Save trained model for reuse
     model_path = os.path.join(models_dir, f'{target}_svm_model.joblib')

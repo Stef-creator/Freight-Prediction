@@ -113,8 +113,8 @@ def run_prophet_model_tuned(filepath='data/processed/processed.csv', target='Gul
 
     # Save metrics summary
     with open(os.path.join(metrics_dir, 'model_results.txt'), 'a') as f:
-        f.write(f'Best Parameters: {best_params}\n')
         f.write(f'\n--- Uni Prophet Regression (Tuned) ({datetime.datetime.now().strftime("%Y-%m-%d %H:%M")}) ---\n')
+        f.write(f'Best Parameters: {best_params}\n')
         f.write(f'Uni Prophet MAE: {final_mae:.2f}\n')
         f.write(f'Uni Prophet R² Score: {final_r2:.3f}\n')
 

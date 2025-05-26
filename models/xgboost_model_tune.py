@@ -125,9 +125,10 @@ def run_xgboost_model_tuned(filepath='data/processed/processed.csv', target='Gul
     # Save evaluation metrics
     with open(os.path.join(metrics_dir, 'model_results.txt'), 'a') as f:
         f.write(f'\n--- XGBoost Regression ({datetime.datetime.now().strftime("%Y-%m-%d %H:%M")}) ---\n')
+        f.write(f'Best Parameters: {search.best_params_}\n')
         f.write(f'XGBoost MAE: {mae:.2f}\n')
         f.write(f'XGBoost R² Score: {r2:.3f}\n')
-        f.write(f'Best Parameters: {search.best_params_}\n')
+        
 
     # Save trained model to disk
     model_path = os.path.join(models_dir, f'{target}_xgboost_model.joblib')

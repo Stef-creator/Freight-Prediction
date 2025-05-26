@@ -124,11 +124,12 @@ def run_multi_prophet_model_tuned(filepath='data/processed/processed.csv',
     plt.close()
 
     with open(os.path.join(metrics_dir, 'model_results.txt'), 'a') as f:
+        f.write(f'\n--- Multi Prophet ({run_label}) ({datetime.datetime.now().strftime("%Y-%m-%d %H:%M")}) ---\n')
         if tune:
             f.write(f'Best Parameters: {best_params}\n')
-        f.write(f'\n--- Multi Prophet ({run_label}) ({datetime.datetime.now().strftime("%Y-%m-%d %H:%M")}) ---\n')
         f.write(f'Multi Prophet MAE: {final_mae:.2f}\n')
         f.write(f'Multi Prophet R² Score: {final_r2:.3f}\n')
+        
         
 
     # Save trained model for reuse
