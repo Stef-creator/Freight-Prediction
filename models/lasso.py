@@ -114,7 +114,7 @@ def run_lasso_regression(filepath='data/processed/processed.csv', target='Gulf')
     plt.close()
 
     #  Save the trained model 
-    model_path = os.path.join(models_dir, f'{target}_lasso_model_nonlagged.joblib')
+    model_path = os.path.join(models_dir, f'{target}_lasso_nonlagged_model.joblib')
     joblib.dump(model, model_path)
 
 
