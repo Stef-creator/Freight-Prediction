@@ -97,11 +97,12 @@ def run_multi_prophet_model_tuned(filepath='data/processed/processed.csv',
     if tune:
         print(f'Best Parameters: {best_params}')
 
-    #  Plot forecast with train/test split marker 
-    fig = best_model.plot(best_forecast)
-    plt.axvline(df_compare['ds'].iloc[split_idx], color='red', linestyle=':', label='Train/Test Split')
-    plt.legend()
-    plt.title(f'Prophet Forecast: Actual vs Predicted ({target})')
+    #  Plot forecast with train/test split marker and correct figure size
+    fig, ax = plt.subplots(figsize=(12, 5))
+    best_model.plot(best_forecast, ax=ax)
+    ax.axvline(df_compare['ds'].iloc[split_idx], color='red', linestyle=':', label='Train/Test Split')
+    ax.legend()
+    ax.set_title(f'Prophet Forecast: Actual vs Predicted ({target})')
     plt.tight_layout()
 
     #  Directories for saving outputs 
