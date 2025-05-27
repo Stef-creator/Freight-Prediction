@@ -70,7 +70,7 @@ def run_arimax_lagged_exog(filepath='data/processed/processed.csv', target='Gulf
     model = SARIMAX(df['y'], exog=df[exog_vars], order=best_order)
     results = model.fit(disp=False)
 
-    #  Predict full sample 
+    #  Forecast the test period 
     df['predicted'] = results.predict(start=0, end=len(df) - 1, exog=df[exog_vars])
 
     #  Evaluate test set 
@@ -78,7 +78,16 @@ def run_arimax_lagged_exog(filepath='data/processed/processed.csv', target='Gulf
     mae = mean_absolute_error(test_compare['y'], test_compare['predicted'])
     r2 = r2_score(test_compare['y'], test_compare['predicted'])
 
-    #  Plot actual vs predicted 
+    #  Define directories 
+    plots_dir = 'reports/plots'
+    models_dir = 'reports/models_saved'
+    metrics_dir = 'reports/models'
+
+    os.makedirs(plots_dir, exist_ok=True)
+    os.makedirs(models_dir, exist_ok=True)
+    os.makedirs(metrics_dir, exist_ok=True)
+    
+    # Save prediction plot
     plt.figure(figsize=(12, 5))
     plt.plot(df['ds'], df['y'], label='Actual', linewidth=2)
     plt.plot(df['ds'], df['predicted'], label='Predicted', linestyle='--')
@@ -90,16 +99,6 @@ def run_arimax_lagged_exog(filepath='data/processed/processed.csv', target='Gulf
     plt.grid(True)
     plt.tight_layout()
 
-    #  Define directories 
-    plots_dir = 'reports/plots'
-    models_dir = 'reports/models_saved'
-    metrics_dir = 'reports/models'
-
-    os.makedirs(plots_dir, exist_ok=True)
-    os.makedirs(models_dir, exist_ok=True)
-    os.makedirs(metrics_dir, exist_ok=True)
-
-    # Save prediction plot
     plot_path = os.path.join(plots_dir, f'{target}_arimax_lagged_prediction_plot.png')
     plt.savefig(plot_path)
     plt.close()

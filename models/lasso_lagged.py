@@ -61,7 +61,7 @@ def run_lasso_with_lags(filepath='data/processed/processed.csv', target='Gulf', 
     X = df[[col for col in df.columns if '_lag' in col]]
     y = df[f'{target}_target']
 
-    #  Time-aware train/test split 
+    #  Train/Test split (80/20) 
     split_idx = int(len(df) * 0.8)
     X_train, X_test = X.iloc[:split_idx], X.iloc[split_idx:]
     y_train, y_test = y.iloc[:split_idx], y.iloc[split_idx:]
@@ -75,23 +75,16 @@ def run_lasso_with_lags(filepath='data/processed/processed.csv', target='Gulf', 
     model = LassoCV(cv=TimeSeriesSplit(n_splits=5), random_state=42)
     model.fit(X_train_scaled, y_train)
 
-    #  Predict and evaluate 
+    #  Predict full range and Evaluate on test set 
     y_pred = model.predict(X_test_scaled)
     mae = mean_absolute_error(y_test, y_pred)
     r2 = r2_score(y_test, y_pred)
-
-    print(f'Lasso Test MAE: {mae:.2f}')
-    print(f'R² Score: {r2:.3f}')
-    print(f'Selected Alpha: {model.alpha_:.4f}')
 
     #  Create coefficient summary DataFrame 
     coef_df = pd.DataFrame({
         'Feature': X.columns,
         'Coefficient': model.coef_
     }).sort_values(by='Coefficient', key=abs, ascending=False)
-
-    print('\nTop Lasso Coefficients:')
-    print(coef_df.head(20))
 
     #  Define directories 
     plots_dir = 'reports/plots'
@@ -103,7 +96,7 @@ def run_lasso_with_lags(filepath='data/processed/processed.csv', target='Gulf', 
     os.makedirs(metrics_dir, exist_ok=True)
 
     
-    # Plot top coefficients
+    # Save prediction plot and top coefficients
     plt.figure(figsize=(10, 5))
     sns.barplot(data=coef_df.head(20), x='Coefficient', y='Feature', orient='h')
     plt.title(f'Top Lasso Coefficients for {target}')
@@ -112,7 +105,7 @@ def run_lasso_with_lags(filepath='data/processed/processed.csv', target='Gulf', 
     plt.savefig(os.path.join(plots_dir, f'Lasso_Coefficients_{target}.png'))
     plt.close()
 
-    # Plot actual vs predicted
+    
     plt.figure(figsize=(12, 4))
     plt.plot(y_test.values, label='Actual', linewidth=2)
     plt.plot(y_pred, label='Predicted', linestyle='--')

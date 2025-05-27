@@ -45,7 +45,7 @@ def run_auto_arima_model(filepath='data/processed/processed.csv', target='Gulf')
     split_idx = int(len(df) * 0.8)
     train, test = df.iloc[:split_idx], df.iloc[split_idx:]
 
-    #  Fit Auto ARIMA model 
+    #  Auto ARIMA for order selection 
     model = auto_arima(
         train['y'],
         seasonal=True,
@@ -55,7 +55,7 @@ def run_auto_arima_model(filepath='data/processed/processed.csv', target='Gulf')
         error_action='ignore'
     )
 
-    #  Forecast the test period 
+    #  Predict full range 
     forecast = model.predict(n_periods=len(test))
 
     #  Evaluate forecast 

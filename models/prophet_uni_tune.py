@@ -41,7 +41,7 @@ def run_prophet_model_tuned(filepath='data/processed/processed.csv', target='Gul
     df = df.set_index('date').resample('W-MON').mean().dropna().reset_index()
     df = df[['date', target]].rename(columns={'date': 'ds', target: 'y'})
 
-    #  Train/Test Split 
+    #  Train/Test split (80/20) 
     split_idx = int(len(df) * 0.8)
     train_df, test_df = df.iloc[:split_idx], df.iloc[split_idx:]
 
@@ -85,16 +85,6 @@ def run_prophet_model_tuned(filepath='data/processed/processed.csv', target='Gul
     final_mae = mean_absolute_error(test_compare['actual'], test_compare['predicted'])
     final_r2 = r2_score(test_compare['actual'], test_compare['predicted'])
 
-    print(f'Uni Prophet (Tuned) - MAE: {final_mae:.2f}')
-    print(f'Uni Prophet (Tuned) - R² Score: {final_r2:.3f}')
-    print(f'Best Parameters: {best_params}')
-
-    #  Forecast plot 
-    fig = best_model.plot(best_forecast)
-    plt.axvline(df_compare['ds'].iloc[split_idx], color='red', linestyle=':', label='Train/Test Split')
-    plt.legend()
-    plt.title(f'Prophet Forecast: Actual vs Predicted ({target})')
-    plt.tight_layout()
 
     #  Directories for saving outputs 
     plots_dir = 'reports/plots'
@@ -105,11 +95,20 @@ def run_prophet_model_tuned(filepath='data/processed/processed.csv', target='Gul
     os.makedirs(models_dir, exist_ok=True)
     os.makedirs(metrics_dir, exist_ok=True)
 
-
     # Save prediction plot
-    plot_path = os.path.join(plots_dir, f'{target}_uni_prophet_tuned_prediction_plot.png')
-    plt.savefig(plot_path)
+    fig = best_model.plot(best_forecast)
+    plt.axvline(df_compare['ds'].iloc[split_idx], color='red', linestyle=':', label='Train/Test Split')
+    plt.legend()
+    plt.title(f'Prophet Forecast: Actual vs Predicted ({target})')
+    plt.tight_layout()
+    
+    plt.savefig(os.path.join(plots_dir, f'{target}_uni_prophet_tuned_prediction_plot.png'))
     plt.close()
+
+    # Save the trained model 
+    model_path = os.path.join(models_dir, f'{target}_uni_prophet_tuned_model.joblib')
+    joblib.dump(model, model_path)
+    print(f'Model saved to {model_path}')
 
     # Save metrics summary
     with open(os.path.join(metrics_dir, 'model_results.txt'), 'a') as f:
@@ -117,11 +116,5 @@ def run_prophet_model_tuned(filepath='data/processed/processed.csv', target='Gul
         f.write(f'Best Parameters: {best_params}\n')
         f.write(f'Uni Prophet MAE: {final_mae:.2f}\n')
         f.write(f'Uni Prophet R² Score: {final_r2:.3f}\n')
-
-    # Save trained model for reuse
-    model_path = os.path.join(models_dir, f'{target}_uni_prophet_tuned_model.joblib')
-    joblib.dump(model, model_path)
-    print(f'Model saved to {model_path}')
-
 
     return best_forecast

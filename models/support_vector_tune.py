@@ -59,7 +59,7 @@ def run_svm_regression_tuned(filepath='data/processed/processed.csv', target='Gu
     X = df.drop(columns=[f'{target}_target'])
     y = df[f'{target}_target']
 
-    # Time-series aware train/test split (80/20)
+    #  Train/Test split (80/20) 
     split_idx = int(len(df) * 0.8)
     X_train, X_test = X.iloc[:split_idx], X.iloc[split_idx:]
     y_train, y_test = y.iloc[:split_idx], y.iloc[split_idx:]
@@ -95,20 +95,6 @@ def run_svm_regression_tuned(filepath='data/processed/processed.csv', target='Gu
     mae = mean_absolute_error(y_test, y_pred)
     r2 = r2_score(y_test, y_pred)
 
-    print(f'SVM Test MAE: {mae:.2f}')
-    print(f'SVM R² Score: {r2:.3f}')
-    print(f'Best SVM Params: {search.best_params_}')
-
-    # Plot actual vs predicted
-    plt.figure(figsize=(12, 5))
-    plt.plot(y_test.values, label='Actual', linewidth=2)
-    plt.plot(y_pred, label='Predicted', linestyle='--')
-    plt.title(f'SVM Regression: 1-Week Ahead {target} Prediction')
-    plt.xlabel('Test Sample Index')
-    plt.ylabel(f'{target} Price')
-    plt.legend()
-    plt.grid(True)
-    plt.tight_layout()
 
     # Define directories
     plots_dir = 'reports/plots'
@@ -120,8 +106,17 @@ def run_svm_regression_tuned(filepath='data/processed/processed.csv', target='Gu
     os.makedirs(metrics_dir, exist_ok=True)
 
     # Save prediction plot
-    plot_path = os.path.join(plots_dir, f'{target}_svm_prediction_plot_tuned.png')
-    plt.savefig(plot_path)
+    plt.figure(figsize=(12, 5))
+    plt.plot(y_test.values, label='Actual', linewidth=2)
+    plt.plot(y_pred, label='Predicted', linestyle='--')
+    plt.title(f'SVM Regression: 1-Week Ahead {target} Prediction')
+    plt.xlabel('Test Sample Index')
+    plt.ylabel(f'{target} Price')
+    plt.legend()
+    plt.grid(True)
+    plt.tight_layout()
+
+    plt.savefig(os.path.join(plots_dir, f'{target}_svm_prediction_plot_tuned.png'))
     plt.close()
 
     # Save evaluation metrics

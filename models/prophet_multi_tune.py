@@ -47,7 +47,7 @@ def run_multi_prophet_model_tuned(filepath='data/processed/processed.csv',
     df = df[['date', target] + regressors].dropna()
     df = df.rename(columns={'date': 'ds', target: 'y'})
 
-    #  Train/test split 
+    #  Train/Test split (80/20) 
     split_idx = int(len(df) * 0.8)
     train_df = df.iloc[:split_idx]
     test_df = df.iloc[split_idx:]
@@ -86,7 +86,7 @@ def run_multi_prophet_model_tuned(filepath='data/processed/processed.csv',
             best_forecast = forecast
             best_params = params
 
-    #  Final evaluation 
+    #  Evaluate on test set 
     df_compare = df.merge(best_forecast[['ds', 'yhat']], on='ds', how='left')
     df_compare.rename(columns={'y': 'actual', 'yhat': 'predicted'}, inplace=True)
     test_compare = df_compare[df_compare['ds'].isin(test_df['ds'])]
@@ -94,8 +94,6 @@ def run_multi_prophet_model_tuned(filepath='data/processed/processed.csv',
     final_mae = mean_absolute_error(test_compare['actual'], test_compare['predicted'])
     final_r2 = r2_score(test_compare['actual'], test_compare['predicted'])
 
-    print(f'Multi Prophet ({"Tuned" if tune else "Default"}) - MAE: {final_mae:.2f}')
-    print(f'Multi Prophet ({"Tuned" if tune else "Default"}) - R² Score: {final_r2:.3f}')
     if tune:
         print(f'Best Parameters: {best_params}')
 
@@ -123,6 +121,12 @@ def run_multi_prophet_model_tuned(filepath='data/processed/processed.csv',
     plt.savefig(plot_path)
     plt.close()
 
+    # Save the trained model 
+    model_path = os.path.join(models_dir, f'{target}_multi_prophet_{run_label}_model.joblib')
+    joblib.dump(model, model_path)
+    print(f'Model saved to {model_path}')
+
+    # Save metrics
     with open(os.path.join(metrics_dir, 'model_results.txt'), 'a') as f:
         f.write(f'\n--- Multi Prophet ({run_label}) ({datetime.datetime.now().strftime("%Y-%m-%d %H:%M")}) ---\n')
         if tune:
@@ -131,11 +135,5 @@ def run_multi_prophet_model_tuned(filepath='data/processed/processed.csv',
         f.write(f'Multi Prophet R² Score: {final_r2:.3f}\n')
         
         
-
-    # Save trained model for reuse
-    model_path = os.path.join(models_dir, f'{target}_multi_prophet_{run_label}_model.joblib')
-    joblib.dump(model, model_path)
-    print(f'Model saved to {model_path}')
-
 
     return best_forecast

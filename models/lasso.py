@@ -41,7 +41,7 @@ def run_lasso_regression(filepath='data/processed/processed.csv', target='Gulf')
         coef_df (pd.DataFrame): DataFrame of feature names and coefficients sorted by absolute value.
     """
 
-    #  Load data 
+    #  Load and prepare data 
     df = pd.read_csv(filepath)
     df['date'] = pd.to_datetime(df['date'])
 
@@ -52,7 +52,7 @@ def run_lasso_regression(filepath='data/processed/processed.csv', target='Gulf')
     X = df.drop(columns=[f'{target}_target'])
     y = df[f'{target}_target']
 
-    #  Time-aware train/test split 
+    #  Train/Test split (80/20) 
     split_idx = int(len(df) * 0.8)
     X_train, X_test = X.iloc[:split_idx], X.iloc[split_idx:]
     y_train, y_test = y.iloc[:split_idx], y.iloc[split_idx:]
@@ -66,14 +66,10 @@ def run_lasso_regression(filepath='data/processed/processed.csv', target='Gulf')
     model = LassoCV(cv=TimeSeriesSplit(n_splits=5), random_state=42)
     model.fit(X_train_scaled, y_train)
 
-    #  Predict and evaluate 
+    #  Predict full range and evaluate 
     y_pred = model.predict(X_test_scaled)
     mae = mean_absolute_error(y_test, y_pred)
     r2 = r2_score(y_test, y_pred)
-
-    print(f'Lasso Test MAE: {mae:.2f}')
-    print(f'R² Score: {r2:.3f}')
-    print(f'Selected Alpha: {model.alpha_:.4f}')
 
     #  Create DataFrame of coefficients 
     coef_df = pd.DataFrame({
