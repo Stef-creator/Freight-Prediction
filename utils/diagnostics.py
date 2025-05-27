@@ -5,8 +5,7 @@ import matplotlib.pyplot as plt
 import seaborn as sns
 from sklearn.feature_selection import mutual_info_regression
 from statsmodels.graphics.tsaplots import plot_acf, plot_pacf
-
-import matplotlib.dates as mdates
+from statsmodels.stats.outliers_influence import variance_inflation_factor
 
 
 
@@ -61,46 +60,79 @@ def visualize_missing_data(filepath='data/processed/processed.csv'):
 
     return None
 
-def check_multicollinearity(df, threshold=0.8, plot=True):
+def correlation_plot(df):
     """
-    Identify pairs of numeric features with high pairwise correlation.
+    Plot the correlation matrix heatmap for all numeric columns in a DataFrame.
 
     Args:
-        df (pd.DataFrame): Input DataFrame (all or mixed types).
-        threshold (float): Correlation threshold above which pairs are flagged.
-        plot (bool): Whether to show a heatmap of correlations.
+        df (pd.DataFrame): Input DataFrame.
 
     Returns:
-        list of tuples: (feature1, feature2, correlation) above threshold.
+        None. Displays a heatmap of the correlation matrix.
     """
-    df = df.drop(columns=['date'], inplace=True) if 'date' in df.columns else df
-    
+    if 'date' in df.columns:
+        df = df.drop(columns=['date'])
+
     df_numeric = df.select_dtypes(include=[np.number])
-    corr_matrix = df_numeric.corr().round(2)  # round for cleaner labels
-    upper = corr_matrix.where(np.triu(np.ones(corr_matrix.shape), k=1).astype(bool))
+    corr_matrix = df_numeric.corr().round(2)
+    plt.figure(figsize=(10, 8))
+    sns.heatmap(
+        corr_matrix,
+        annot=True,
+        fmt=".2f",
+        cmap='coolwarm',
+        square=True,
+        cbar=True
+    )
+    plt.title("Correlation Matrix (annotated)")
+    plt.tight_layout()
+    plt.show()
+    return
 
-    high_corr_pairs = [
-        (col1, col2, corr_matrix.loc[col1, col2])
-        for col1 in upper.columns
-        for col2 in upper.index
-        if upper.loc[col1, col2] > threshold
-    ]
+def vif(df, threshold=5.0, drop=True, verbose=True):
+    """
+    Calculate Variance Inflation Factor (VIF) for each numeric feature in the DataFrame.
+    Optionally drop the feature with the highest VIF above the threshold iteratively.
 
-    if plot:
-        plt.figure(figsize=(10, 8))
-        sns.heatmap(
-            corr_matrix,
-            annot=True,
-            fmt=".2f",           # show values
-            cmap='coolwarm',
-            square=True,
-            cbar=True
-        )
-        plt.title("Correlation Matrix (annotated)")
-        plt.tight_layout()
-        plt.show()
-        return high_corr_pairs
+    Args:
+        df (pd.DataFrame): Input DataFrame (should not include target variable).
+        threshold (float): VIF threshold above which to flag multicollinearity.
+        drop (bool): Whether to iteratively drop features with highest VIF above threshold.
+        verbose (bool): Whether to print dropped features and VIFs.
 
+    Returns:
+        pd.DataFrame: DataFrame with features and their VIF values, sorted descending.
+    """
+    X = df.select_dtypes(include=[np.number]).dropna().copy()
+    dropped = []
+
+    while True:
+        vif_data = []
+        columns = X.columns
+        for i in range(len(columns)):
+            vif_value = variance_inflation_factor(X.values, i)
+            vif_data.append({'Feature': columns[i], 'VIF': vif_value})
+        vif_df = pd.DataFrame(vif_data).sort_values(by='VIF', ascending=False)
+        max_vif = vif_df.iloc[0]
+        if max_vif['VIF'] > threshold and drop:
+            dropped.append((max_vif['Feature'], max_vif['VIF']))
+            if verbose:
+                print(f"Dropping '{max_vif['Feature']}' with VIF={max_vif['VIF']:.2f}")
+            X = X.drop(columns=[max_vif['Feature']])
+            if X.shape[1] == 1:
+                break
+        else:
+            break
+
+    if verbose:
+        if dropped:
+            print("Dropped features due to high VIF:")
+            for feat, v in dropped:
+                print(f"  {feat}: VIF={v:.2f}")
+        print(f"Final VIFs (threshold={threshold}):")
+        print(vif_df)
+
+    return vif_df
 
 
 def compute_mutual_information(df, target='Gulf', feature_cols=None, plot=True):
@@ -128,11 +160,12 @@ def compute_mutual_information(df, target='Gulf', feature_cols=None, plot=True):
     mi_df = mi_df.sort_values(by='Mutual Information', ascending=False)
 
     if plot:
-        plt.figure(figsize=(10, 6))
+        plt.figure(figsize=(6, 5))
         sns.barplot(data=mi_df, x='Mutual Information', y='Feature', palette='viridis')
-        plt.title(f'Mutual Information with Target: {target}')
+        plt.title(f'Mutual Information with Target: {target}', fontsize=12)
         plt.grid(True)
         plt.tight_layout()
         plt.show()
+        
 
     return mi_df

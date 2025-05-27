@@ -41,6 +41,7 @@ def run_xgboost_model_tuned(filepath='data/processed/processed.csv', target='Gul
     df = pd.read_csv(filepath)
     df['date'] = pd.to_datetime(df['date'])
 
+    # Shift target forward 1 week to predict next week
     df[f'{target}_target'] = df[target].shift(-1)
 
     drop_cols = ['date', target, 'ship_cap', 'gscpi', 'trade_vol', 'ships_waiting',

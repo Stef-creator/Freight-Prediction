@@ -88,7 +88,7 @@ def run_lasso_regression(filepath='data/processed/processed.csv', target='Gulf')
 
     # Save prediction plot and 20 coefficients barplot
     
-    plt.figure(figsize=(10, 5))
+    plt.figure(figsize=(6, 5))
     sns.barplot(data=coef_df.head(20), x='Coefficient', y='Feature', orient='h')
     plt.title(f'Top Lasso Coefficients for {target}')
     plt.grid(True)

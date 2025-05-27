@@ -55,7 +55,7 @@ def plot_comparison(df):
     plt.xlabel('MAE')
     plt.title('Model Comparison - Mean Absolute Error')
     plt.tight_layout()
-    plt.savefig('reports/models/comparison_mae.png')
+    plt.savefig('reports/plots/comparison_mae.png')
     plt.close()
 
     plt.figure(figsize=(10, 6))
@@ -63,9 +63,8 @@ def plot_comparison(df):
     plt.xlabel('R² Score')
     plt.title('Model Comparison - R² Score')
     plt.tight_layout()
-    plt.savefig('reports/models/comparison_r2.png')
+    plt.savefig('reports/plots/comparison_r2.png')
     plt.close()
-
 
 if __name__ == '__main__':
     df = parse_model_results()

@@ -19,9 +19,10 @@ def compute_seasonal_features(filepath, column, showplot=False):
     df = pd.read_csv(filepath)
     df['date'] = pd.to_datetime(df['date'])
     df = df.sort_values('date')
+    df = df.set_index('date')[[column]]  
 
     # Weekly frequency, interpolate gaps
-    df = df.set_index('date').resample('W-MON').mean().interpolate()
+    df = df.resample('W-MON').mean().interpolate()
 
     # Decompose using additive model (assumes linear trend + seasonal pattern)
     result = seasonal_decompose(df[column], model='additive', period=52)
@@ -66,7 +67,7 @@ def compute_bpi_volatility(filepath='data/processed/bpi.csv', showplots=False):
     df['bpi_volatility'] = df['bpi'].rolling(window=4).std()
 
     if showplots:
-        fig, (ax1, ax2) = plt.subplots(nrows=2, figsize=(12, 8), sharex=True)
+        fig, (ax1, ax2) = plt.subplots(nrows=2, figsize=(12, 6), sharex=True)
 
         # Plot raw BPI
         ax1.plot(df['date'], df['bpi'], label='BPI')

@@ -1,8 +1,9 @@
 import sys
 import os
 
-# Add root project directory to sys.path
-sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '.')))
+# Automatically find and add project root to sys.path
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
+
 
 # Import all model wrappers
 from models.arima import run_auto_arima_model
@@ -17,7 +18,7 @@ from models.prophet_multi_tune import run_multi_prophet_model_tuned
 from models.prophet_uni_tune import run_prophet_model_tuned
 
 
-def run_all_models():
+def run_all_models(filepath='data/processed/processed.csv', target='Gulf'):
     """
     Run all predictive models for the specified target variable.
 
@@ -45,22 +46,18 @@ def run_all_models():
     """
     print("\n🚀 Running all models for target: Gulf\n")
 
-    run_auto_arima_model(target='Gulf')
-    run_arimax_model(target='Gulf')
-    run_arimax_lagged_exog(target='Gulf')
+    run_auto_arima_model(filepath=filepath, target='Gulf')
+    run_arimax_model(filepath=filepath, target='Gulf')
+    run_arimax_lagged_exog(filepath=filepath, target='Gulf')
 
-    run_lasso_regression(target='Gulf')
-    run_lasso_with_lags(target='Gulf')
-    run_ridge_regression(target='Gulf')
+    run_lasso_regression(filepath=filepath, target='Gulf')
+    run_lasso_with_lags(filepath=filepath, target='Gulf')
+    run_ridge_regression(filepath=filepath, target='Gulf')
 
-    run_prophet_model_tuned(target='Gulf')
-    run_multi_prophet_model_tuned(target='Gulf')
+    run_prophet_model_tuned(filepath=filepath, target='Gulf')
+    run_multi_prophet_model_tuned(filepath=filepath, target='Gulf')
 
-    run_svm_regression_tuned(target='Gulf')
-    run_xgboost_model_tuned(target='Gulf')
+    run_svm_regression_tuned(filepath=filepath, target='Gulf')
+    run_xgboost_model_tuned(filepath=filepath, target='Gulf')
 
     print("\n✅ All models executed and results saved to reports/models/\n")
-
-
-if __name__ == '__main__':
-    run_all_models()

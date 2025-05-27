@@ -41,7 +41,7 @@ def run_arimax_model(filepath='data/processed/processed.csv', target='Gulf'):
     df = pd.read_csv(filepath)
     df['date'] = pd.to_datetime(df['date'])
 
-    exog_vars = ['bpi', 'PNW', 'brent_price', 'corn_price', 'ships_anchored']
+    exog_vars = ['bpi', 'brent_price', 'corn_price', 'brent_price_seasonal', 'ships_anchored']
     df = df[['date', target] + exog_vars].dropna()
     df = df.rename(columns={'date': 'ds', target: 'y'})
 
@@ -59,7 +59,6 @@ def run_arimax_model(filepath='data/processed/processed.csv', target='Gulf'):
         trace=True
     )
     best_order = auto_model.order
-
 
     #  Fit SARIMAX on full data 
     model = SARIMAX(df['y'], exog=df[exog_vars], order=best_order)
@@ -82,7 +81,6 @@ def run_arimax_model(filepath='data/processed/processed.csv', target='Gulf'):
     os.makedirs(models_dir, exist_ok=True)
     os.makedirs(metrics_dir, exist_ok=True)
 
-
     # Save prediction plot
     plt.figure(figsize=(12, 5))
     plt.plot(df['ds'], df['y'], label='Actual', linewidth=2)
@@ -94,7 +92,6 @@ def run_arimax_model(filepath='data/processed/processed.csv', target='Gulf'):
     plt.legend()
     plt.grid(True)
     plt.tight_layout()
-
 
     plt.savefig(os.path.join(plots_dir, f'{target}_arimax_prediction_plot.png'))
     plt.close()
@@ -111,3 +108,5 @@ def run_arimax_model(filepath='data/processed/processed.csv', target='Gulf'):
         f.write(f'ARIMAX R²: {r2:.3f}\n')
 
     return results
+
+run_arimax_model()
