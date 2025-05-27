@@ -1,103 +1,136 @@
 import os
 import joblib
 import pandas as pd
+import numpy as np
 import matplotlib.pyplot as plt
 import shap
+from prophet import Prophet
+from statsmodels.tsa.statespace.sarimax import SARIMAXResults
+from sklearn.linear_model import LassoCV, Ridge
+from sklearn.svm import SVR
+from xgboost import XGBRegressor
 
-def interpret_xgboost_model(model_path, data_path, target, plot_dir='reports/interpretability'):
+# === Path config ===
+MODEL_DIR = "reports/models_saved"
+DATA_PATH = "data/processed/processed.csv"
+PLOTS_DIR = "reports/interpretability_plots"
+os.makedirs(PLOTS_DIR, exist_ok=True)
+
+
+def load_model(model_name):
     """
-    Load saved XGBoost model and data, compute SHAP values, plot global and dependence plots.
+    Loads a machine learning model from the specified model directory.
 
     Args:
-        model_path (str): Path to saved XGBoost model (.joblib).
-        data_path (str): Path to processed dataset CSV.
-        target (str): Target column name.
-        plot_dir (str): Directory to save interpretability plots.
+        model_name (str): The filename of the model to load.
 
     Returns:
-        None
+        object: The loaded model object.
+
+    Raises:
+        FileNotFoundError: If the specified model file does not exist.
+        Exception: If there is an error during model loading.
+
+    Example:
+        model = load_model("my_model.pkl")
     """
-    os.makedirs(plot_dir, exist_ok=True)
+    path = os.path.join(MODEL_DIR, model_name)
+    return joblib.load(path)
 
-    # Load model and data
-    model = joblib.load(model_path)
-    df = pd.read_csv(data_path)
-    drop_cols = [
-        'date', target, 'ship_cap', 'gscpi', 'trade_vol', 'ships_waiting',
-        'bpi_volatility', 'wheat_price', 'brent_price_trend',
-        'brent_price_seasonal', 'bpi_trend', 'bpi_seasonal'
-    ]
-    df = df.drop(columns=[col for col in drop_cols if col in df.columns])
-    df = df.dropna()
-    X = df.drop(columns=[target, f'{target}_target'], errors='ignore')
 
-    # SHAP TreeExplainer
-    explainer = shap.TreeExplainer(model)
-    shap_values = explainer.shap_values(X)
+def interpret_linear_model(model, feature_names, model_name):
+    """
+    Analyzes and visualizes the coefficients of a linear model.
 
-    # SHAP summary plot (global feature importance)
-    plt.figure(figsize=(10, 6))
-    shap.summary_plot(shap_values, X, show=False)
-    plt.title('SHAP Summary Plot (XGBoost)')
+    Parameters:
+        model: A fitted linear model object with a `coef_` attribute (e.g., from scikit-learn).
+        feature_names (list of str): List of feature names corresponding to the model's coefficients.
+        model_name (str): Name of the model, used for plot title and filename.
+
+    Returns:
+        pandas.DataFrame: DataFrame containing features, their coefficients, and absolute coefficient values,
+                          sorted by absolute value in descending order.
+
+    Side Effects:
+        Saves a horizontal bar plot of the top 20 coefficients to the directory specified by `PLOTS_DIR`,
+        with the filename format "{model_name}_coefficients.png".
+    """
+    coefs = model.coef_
+    coef_df = pd.DataFrame({"Feature": feature_names, "Coefficient": coefs})
+    coef_df["Abs"] = coef_df["Coefficient"].abs()
+    coef_df = coef_df.sort_values("Abs", ascending=False)
+
+    # Save plot
+    plt.figure(figsize=(8, 6))
+    coef_df.head(20).plot(kind="barh", x="Feature", y="Coefficient", legend=False)
+    plt.title(f"Top Coefficients: {model_name}")
     plt.tight_layout()
-    plt.savefig(os.path.join(plot_dir, 'xgboost_shap_summary.png'))
+    plt.savefig(os.path.join(PLOTS_DIR, f"{model_name}_coefficients.png"))
     plt.close()
-
-    # SHAP dependence plots for top 5 features
-    top_features = X.columns[:5]
-    for feature in top_features:
-        plt.figure(figsize=(8, 5))
-        shap.dependence_plot(feature, shap_values, X, show=False)
-        plt.title(f'SHAP Dependence Plot: {feature}')
-        plt.tight_layout()
-        plt.savefig(os.path.join(plot_dir, f'xgboost_shap_dependence_{feature}.png'))
-        plt.close()
-
-    print(f'XGBoost SHAP plots saved to {plot_dir}')
+    return coef_df
 
 
-def interpret_svr_model(model_path, data_path, target, plot_dir='reports/interpretability'):
+def interpret_model_shap(model, X, model_name):
     """
-    Load saved SVR model and data, compute SHAP values using KernelExplainer, plot global explanations.
+    Generates and saves a SHAP summary plot for a given model and dataset.
+
+    This function uses the SHAP library to compute SHAP values for the provided model and input data,
+    then creates a summary plot visualizing feature importance. The plot is saved to disk with a filename
+    based on the model name.
 
     Args:
-        model_path (str): Path to saved SVR model (.joblib).
-        data_path (str): Path to processed dataset CSV.
-        target (str): Target column name.
-        plot_dir (str): Directory to save interpretability plots.
+        model: The trained machine learning model to interpret.
+        X (pd.DataFrame or np.ndarray): The input features used for SHAP value computation.
+        model_name (str): The name of the model, used for plot titling and filename.
 
-    Returns:
-        None
+    Side Effects:
+        Saves a SHAP summary plot as a PNG file in the directory specified by PLOTS_DIR.
+
+    Raises:
+        Any exceptions raised by SHAP, matplotlib, or file I/O operations.
     """
-    os.makedirs(plot_dir, exist_ok=True)
+    explainer = shap.Explainer(model, X)
+    shap_values = explainer(X)
 
-    # Load model and data
-    model = joblib.load(model_path)
-    df = pd.read_csv(data_path)
-    drop_cols = [
-        'date', target, 'ship_cap', 'gscpi', 'trade_vol', 'ships_waiting',
-        'bpi_volatility', 'wheat_price', 'brent_price_trend',
-        'brent_price_seasonal', 'bpi_trend', 'bpi_seasonal'
-    ]
-    df = df.drop(columns=[col for col in drop_cols if col in df.columns])
-    df = df.dropna()
-    X = df.drop(columns=[target, f'{target}_target'], errors='ignore')
-
-    # Sample background for KernelExplainer to speed up
-    background = shap.sample(X, 100, random_state=42)
-
-    explainer = shap.KernelExplainer(model.predict, background)
-    shap_values = explainer.shap_values(X)
-
-    # SHAP summary plot (global feature importance)
-    plt.figure(figsize=(10, 6))
     shap.summary_plot(shap_values, X, show=False)
-    plt.title('SHAP Summary Plot (SVR)')
+    plt.title(f"SHAP Summary Plot: {model_name}")
     plt.tight_layout()
-    plt.savefig(os.path.join(plot_dir, 'svr_shap_summary.png'))
+    plt.savefig(os.path.join(PLOTS_DIR, f"{model_name}_shap_summary.png"))
     plt.close()
 
-    print(f'SVR SHAP plots saved to {plot_dir}')
 
-interpret_svr_model('reports/models_saved/Gulf_svm_model.joblib','data/processed/processed.csv', 'Gulf')
-interpret_xgboost_model('reports/models_saved/Gulf_xgboost_model.joblib','data/processed/processed.csv', 'Gulf')
+def interpret_arimax(model_path):
+    """
+    Loads an ARIMAX model from the specified path, prepares the relevant dataset, and generates diagnostic plots.
+
+    Args:
+        model_path (str): The file path to the saved ARIMAX model (joblib format).
+
+    Returns:
+        pandas.DataFrame: A DataFrame containing the model's coefficients with their names as index and "Coefficient" as the column.
+
+    Side Effects:
+        - Reads the dataset from DATA_PATH.
+        - Saves diagnostic plots to the PLOTS_DIR as "ARIMAX_diagnostics.png".
+
+    Notes:
+        - Assumes DATA_PATH and PLOTS_DIR are defined elsewhere in the code.
+        - The input CSV must contain the columns: 'date', 'Gulf', 'bpi', 'PNW', 'brent_price', 'corn_price', 'ships_anchored'.
+        - The function renames 'date' to 'ds' and 'Gulf' to 'y' for compatibility.
+    """
+    model = joblib.load(model_path)
+    df = pd.read_csv(DATA_PATH)
+    df['date'] = pd.to_datetime(df['date'])
+    df = df[['date', 'Gulf', 'bpi', 'PNW', 'brent_price', 'corn_price', 'ships_anchored']].dropna()
+    df = df.rename(columns={'date': 'ds', 'Gulf': 'y'})
+
+    rebuild = SARIMAXResults(model=model)
+    results = rebuild
+
+    fig = results.plot_diagnostics(figsize=(12, 8))
+    plt.tight_layout()
+    plt.savefig(os.path.join(PLOTS_DIR, "ARIMAX_diagnostics.png"))
+    plt.close()
+    return results.params.to_frame(name="Coefficient")
+
+

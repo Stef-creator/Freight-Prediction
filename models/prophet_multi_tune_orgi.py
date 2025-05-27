@@ -15,25 +15,21 @@ import warnings
 warnings.filterwarnings('ignore')
 
 
-import os
-import datetime
-import joblib
-import pandas as pd
-import numpy as np
-import matplotlib.pyplot as plt
-from prophet import Prophet
-from sklearn.model_selection import ParameterSampler
-from sklearn.metrics import mean_absolute_error, r2_score
-import warnings
-warnings.filterwarnings('ignore')
-
 def run_multi_prophet_model_tuned(filepath='data/processed/processed.csv',
                                   target='Gulf',
                                   regressors=['bpi', 'PNW', 'brent_price', 'corn_price', 'ships_anchored'],
                                   tune=True):
     """
     Train and evaluate a multivariate Prophet model with optional hyperparameter tuning
-    to forecast a target time series, using regressor values at t to predict y at t+1.
+    to forecast a target time series including multiple external regressors.
+
+    Steps:
+    1. Load and clean dataset with required regressors.
+    2. Perform time-aware train/test split (80/20)
+    3. Tune Prophet's hyperparameters using random search if tune=True.
+    4. Select the best model based on test MAE.
+    5. Evaluate final model with MAE and R² on test data.
+    6. Plot actual vs predicted and save results to disk.
 
     Args:
         filepath (str): Path to the processed dataset CSV.
@@ -45,23 +41,18 @@ def run_multi_prophet_model_tuned(filepath='data/processed/processed.csv',
         pd.DataFrame: Forecast dataframe containing Prophet predictions (yhat).
     """
 
-    # Load and prepare data
+    #  Load and prepare data 
     df = pd.read_csv(filepath)
     df['date'] = pd.to_datetime(df['date'])
     df = df[['date', target] + regressors].dropna()
-
-    # Shift regressors backward by 1 → x_t predicts y_{t+1}
-    for reg in regressors:
-        df[reg] = df[reg].shift(1)
-    df = df.dropna()  # drop rows with missing lagged values
     df = df.rename(columns={'date': 'ds', target: 'y'})
 
-    # Train/Test split (80/20)
+    #  Train/Test split (80/20) 
     split_idx = int(len(df) * 0.8)
     train_df = df.iloc[:split_idx]
     test_df = df.iloc[split_idx:]
 
-    # Hyperparameter grid
+    #  Hyperparameter grid 
     param_grid = {
         'changepoint_prior_scale': [0.001, 0.01, 0.05, 0.1],
         'seasonality_prior_scale': [1.0, 5.0, 10.0],
@@ -74,7 +65,7 @@ def run_multi_prophet_model_tuned(filepath='data/processed/processed.csv',
     best_mae = float('inf')
     best_params = None
 
-    # Hyperparameter tuning loop
+    #  Hyperparameter tuning loop 
     for params in param_list:
         model = Prophet(weekly_seasonality=True, yearly_seasonality=False, **params)
         for reg in regressors:
@@ -95,7 +86,7 @@ def run_multi_prophet_model_tuned(filepath='data/processed/processed.csv',
             best_forecast = forecast
             best_params = params
 
-    # Evaluate on test set
+    #  Evaluate on test set 
     df_compare = df.merge(best_forecast[['ds', 'yhat']], on='ds', how='left')
     df_compare.rename(columns={'y': 'actual', 'yhat': 'predicted'}, inplace=True)
     test_compare = df_compare[df_compare['ds'].isin(test_df['ds'])]
@@ -106,37 +97,44 @@ def run_multi_prophet_model_tuned(filepath='data/processed/processed.csv',
     if tune:
         print(f'Best Parameters: {best_params}')
 
-    # Plot forecast with train/test split marker
+    #  Plot forecast with train/test split marker and correct figure size
     fig, ax = plt.subplots(figsize=(12, 5))
     best_model.plot(best_forecast, ax=ax)
     ax.axvline(df_compare['ds'].iloc[split_idx], color='red', linestyle=':', label='Train/Test Split')
     ax.legend()
-    ax.set_title(f'Prophet Forecast (x_t → y_t+1): Actual vs Predicted ({target})')
+    ax.set_title(f'Prophet Forecast: Actual vs Predicted ({target})')
     plt.tight_layout()
 
-    # Save outputs
+    #  Directories for saving outputs 
     plots_dir = 'reports/plots'
     models_dir = 'reports/models_saved'
     metrics_dir = 'reports/models'
+
     os.makedirs(plots_dir, exist_ok=True)
     os.makedirs(models_dir, exist_ok=True)
     os.makedirs(metrics_dir, exist_ok=True)
 
+    # Save evaluation metrics
     run_label = 'Tuned' if tune else 'Untuned'
-    plot_path = os.path.join(plots_dir, f'{target}_multi_prophet_lagged_prediction_plot_{run_label}.png')
+
+    # Save prediction plot
+    plot_path = os.path.join(plots_dir, f'{target}_multi_prophet_prediction_plot_{run_label}.png')
     plt.savefig(plot_path)
     plt.close()
 
-    model_path = os.path.join(models_dir, f'{target}_multi_prophet_lagged_{run_label}_model.joblib')
-    joblib.dump(best_model, model_path)
+    # Save the trained model 
+    model_path = os.path.join(models_dir, f'{target}_multi_prophet_{run_label}_model.joblib')
+    joblib.dump(model, model_path)
     print(f'Model saved to {model_path}')
 
+    # Save metrics
     with open(os.path.join(metrics_dir, 'model_results.txt'), 'a') as f:
-        f.write(f'\n--- Multi Prophet Lagged ({run_label}) ({datetime.datetime.now().strftime("%Y-%m-%d %H:%M")}) ---\n')
+        f.write(f'\n--- Multi Prophet ({run_label}) ({datetime.datetime.now().strftime("%Y-%m-%d %H:%M")}) ---\n')
         if tune:
             f.write(f'Best Parameters: {best_params}\n')
-        f.write(f'MAE: {final_mae:.2f}\n')
-        f.write(f'R² Score: {final_r2:.3f}\n')
+        f.write(f'Multi Prophet MAE: {final_mae:.2f}\n')
+        f.write(f'Multi Prophet R² Score: {final_r2:.3f}\n')
+        
+        
 
     return best_forecast
-
