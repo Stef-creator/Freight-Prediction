@@ -80,7 +80,3 @@ def load_all_data():
     print('✅ All datasets merged and saved to data/processed/all_data.csv')
 
     return df
-
-
-if __name__ == '__main__':
-    load_all_data()

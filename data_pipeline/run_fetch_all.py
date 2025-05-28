@@ -62,7 +62,3 @@ def fetch_all():
     fetch_tvol()
 
     print('\n✅ All datasets fetched and saved to data/processed/')
-
-
-if __name__ == '__main__':
-    fetch_all()

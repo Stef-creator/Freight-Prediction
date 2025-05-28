@@ -65,10 +65,3 @@ def plot_comparison(df):
     plt.tight_layout()
     plt.savefig('reports/plots/comparison_r2.png')
     plt.close()
-
-if __name__ == '__main__':
-    df = parse_model_results()
-    print("\n📊 Model Performance Summary:")
-    print(df.to_string(index=False))
-    plot_comparison(df)
-    print("\n✅ Comparison plots saved to 'reports/models/'.")

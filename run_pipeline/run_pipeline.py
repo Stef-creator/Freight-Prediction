@@ -33,6 +33,3 @@ def whole_pipeline():
     print("\n✅ Data Pipeline executed successfully")
     print("✅ Processed dataset ready for modeling at: data/processed/processed.csv")
 
-
-if __name__ == '__main__':
-    whole_pipeline()

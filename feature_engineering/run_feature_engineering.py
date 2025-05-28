@@ -56,10 +56,3 @@ def run_all_feature_engineering():
     df.to_csv('data/processed/processed.csv', index=False)
 
     return df
-
-
-if __name__ == '__main__':
-    df = run_all_feature_engineering()
-    print('✅ Missing Gulf and PNW interpolated')
-    print('✅ Feature engineered!')
-    print('✅ Processed data created and saved to data/processed/processed.csv')
