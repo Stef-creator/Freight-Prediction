@@ -116,3 +116,7 @@ Contributions are welcome! Please feel free to write to me to open an issue and 
 Stefan Pilegaard Pedersen
 May 2025
 
+## License
+
+This project is licensed under the [GNU General Public License v3.0](LICENSE).
+
