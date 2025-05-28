@@ -5,13 +5,13 @@ import os
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 
 # Individual fetch functions
-from data_pipeline.fetch_bpi import fetch_bpi
-from data_pipeline.fetch_brent import fetch_brent
-from data_pipeline.fetch_commodities import fetch_wheat, fetch_corn
-from data_pipeline.fetch_congestion_metrics import fetch_anchored, fetch_awaiting, fetch_capacity
-from data_pipeline.fetch_gscpi import fetch_gscpi
-from data_pipeline.fetch_targets import fetch_targets
-from data_pipeline.fetch_trade_vol import fetch_tvol
+from pipeline.fetch.fetch_bpi import fetch_bpi
+from pipeline.fetch.fetch_brent import fetch_brent
+from pipeline.fetch.fetch_commodities import fetch_wheat, fetch_corn
+from pipeline.fetch.fetch_congestion_metrics import fetch_anchored, fetch_awaiting, fetch_capacity
+from pipeline.fetch.fetch_gscpi import fetch_gscpi
+from pipeline.fetch.fetch_targets import fetch_targets
+from pipeline.fetch.fetch_trade_vol import fetch_tvol
 
 
 def fetch_all():

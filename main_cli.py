@@ -47,11 +47,11 @@ Last updated: May 2025
 
 import argparse
 
-from data_pipeline.run_fetch_all import fetch_all
-from data_pipeline.load_all import load_all_data
-from feature_engineering.run_feature_engineering import run_all_feature_engineering
-from models.run_all_models import run_all_models
-from reports.compare_models import parse_model_results, plot_comparison
+from scripts.run_fetch_all import fetch_all
+from pipeline.fetch.load_all import load_all_data
+from scripts.run_feature_engineering import run_all_feature_engineering
+from pipeline.models.run_all_models import run_all_models
+from utils.compare_models import parse_model_results, plot_comparison
 
 
 def main():

@@ -5,9 +5,9 @@ import os
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 
 import pandas as pd
-from data_pipeline.run_fetch_all import fetch_all
-from data_pipeline.load_all import load_all_data
-from feature_engineering.run_feature_engineering import run_all_feature_engineering
+from scripts.run_fetch_all import fetch_all
+from pipeline.fetch.load_all import load_all_data
+from scripts.run_feature_engineering import run_all_feature_engineering
 
 
 def whole_pipeline():
