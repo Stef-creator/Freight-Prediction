@@ -102,17 +102,17 @@ def run_prophet_model_tuned(filepath='data/processed/processed.csv', target='Gul
     plt.title(f'Prophet Forecast: Actual vs Predicted ({target})')
     plt.tight_layout()
     
-    plt.savefig(os.path.join(plots_dir, f'{target}_uni_prophet_tuned_prediction_plot.png'))
+    plt.savefig(os.path.join(plots_dir, f'{target}_uni_prophet_prediction_plot.png'))
     plt.close()
 
     # Save the trained model 
-    model_path = os.path.join(models_dir, f'{target}_uni_prophet_tuned_model.joblib')
+    model_path = os.path.join(models_dir, f'{target}_uni_prophet_model.joblib')
     joblib.dump(model, model_path)
     print(f'Model saved to {model_path}')
 
     # Save metrics summary
     with open(os.path.join(metrics_dir, 'model_results.txt'), 'a') as f:
-        f.write(f'\n--- Uni Prophet Regression (Tuned) ({datetime.datetime.now().strftime("%Y-%m-%d %H:%M")}) ---\n')
+        f.write(f'\n--- Uni Prophet Regression ({datetime.datetime.now().strftime("%Y-%m-%d %H:%M")}) ---\n')
         f.write(f'Best Parameters: {best_params}\n')
         f.write(f'Uni Prophet MAE: {final_mae:.2f}\n')
         f.write(f'Uni Prophet R² Score: {final_r2:.3f}\n')

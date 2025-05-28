@@ -118,7 +118,7 @@ def run_xgboost_model_tuned(filepath='data/processed/processed.csv', target='Gul
     plt.grid(True)
     plt.tight_layout()
 
-    plt.savefig(os.path.join(plots_dir, f'{target}_xgboost_prediction_plot_tuned.png'))
+    plt.savefig(os.path.join(plots_dir, f'{target}_xgboost_prediction_plot.png'))
     plt.close()
 
     # Save the trained model 

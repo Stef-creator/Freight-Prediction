@@ -116,7 +116,7 @@ def run_svm_regression_tuned(filepath='data/processed/processed.csv', target='Gu
     plt.grid(True)
     plt.tight_layout()
 
-    plt.savefig(os.path.join(plots_dir, f'{target}_svm_prediction_plot_tuned.png'))
+    plt.savefig(os.path.join(plots_dir, f'{target}_svm_prediction_plot.png'))
     plt.close()
 
     # Save evaluation metrics

@@ -1,4 +1,0 @@
-
---- Lasso Regression (2025-04-15 21:20) ---
-Lasso MAE: 1.22
-Lasso R² Score: 0.436

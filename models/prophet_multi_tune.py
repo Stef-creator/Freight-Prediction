@@ -123,11 +123,11 @@ def run_multi_prophet_model_tuned(filepath='data/processed/processed.csv',
     os.makedirs(metrics_dir, exist_ok=True)
 
     run_label = 'Tuned' if tune else 'Untuned'
-    plot_path = os.path.join(plots_dir, f'{target}_multi_prophet_lagged_prediction_plot_{run_label}.png')
+    plot_path = os.path.join(plots_dir, f'{target}_multi_prophet_lagged_prediction_plot.png')
     plt.savefig(plot_path)
     plt.close()
 
-    model_path = os.path.join(models_dir, f'{target}_multi_prophet_lagged_{run_label}_model.joblib')
+    model_path = os.path.join(models_dir, f'{target}_multi_prophet_lagged_model.joblib')
     joblib.dump(best_model, model_path)
     print(f'Model saved to {model_path}')
 
