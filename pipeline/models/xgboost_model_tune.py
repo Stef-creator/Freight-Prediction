@@ -94,10 +94,6 @@ def run_xgboost_model_tuned(filepath='data/processed/processed.csv', target='Gul
     mae = mean_absolute_error(y_test, y_pred)
     r2 = r2_score(y_test, y_pred)
 
-    print(f'XGBoost Test MAE: {mae:.2f}')
-    print(f'XGBoost R² Score: {r2:.3f}')
-    print('Best Parameters:', search.best_params_)
-
     # Define directories
     plots_dir = 'reports/plots'
     metrics_dir = 'reports/models'
@@ -125,7 +121,6 @@ def run_xgboost_model_tuned(filepath='data/processed/processed.csv', target='Gul
     model_path = os.path.join(models_dir, f'{target}_xgboost_model.joblib')
     joblib.dump(best_model, model_path)
     print(f'Model saved to {model_path}')
-
 
     # Save evaluation metrics
     with open(os.path.join(metrics_dir, 'model_results.txt'), 'a') as f:
