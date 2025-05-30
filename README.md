@@ -21,14 +21,14 @@ This project provides a comprehensive pipeline for forecasting freight prices us
 
 ## Project Structure
 
-/data/raw/ # Raw data files (Excel, CSV)
-/data/processed/ # Cleaned and feature-engineered datasets
-/models/ # Model scripts (ARIMA, XGBoost, Lasso, Prophet, etc.)
-/reports/models/ # Model evaluation metrics and plots
-/utils/ # Utility functions (preprocessing, diagnostics)
-/data_pipeline/ # Scripts to fetch and load raw data
-/feature_engineering/ # Feature engineering pipeline scripts
-/notebooks/ # Jupyter notebooks and demo
+- /data/raw/ # Raw data files (Excel, CSV)
+- /data/processed/ # Cleaned and feature-engineered datasets
+- /models/ # Model scripts (ARIMA, XGBoost, Lasso, Prophet, etc.)
+- /reports/models/ # Model evaluation metrics and plots
+- /utils/ # Utility functions (preprocessing, diagnostics)
+- /data_pipeline/ # Scripts to fetch and load raw data
+- /feature_engineering/ # Feature engineering pipeline scripts
+- /notebooks/ # Jupyter notebooks and demo
 
 
 ---
