@@ -83,15 +83,15 @@ Run any part or all of the pipeline using the CLI interface main_cli.py.
 4. Model Training
     Multiple models trained and benchmarked, including:
 
-    --Auto ARIMA
-    --SARIMAX with exogenous variables
-    --Lasso (with and without lags)
-    --Ridge Regression
-    --Support Vector Regression (with hyperparameter tuning)
-    --XGBoost Regression (with hyperparameter tuning)
-    --Prophet (uni- and multivariate, tuned)
+    - Auto ARIMA
+    - SARIMAX with exogenous variables
+    - Lasso (with and without lags)
+    - Ridge Regression
+    - Support Vector Regression (with hyperparameter tuning)
+    - XGBoost Regression (with hyperparameter tuning)
+    - Prophet (uni- and multivariate, tuned)
 
-5. Results Reporting
+6. Results Reporting
     Generation of performance summaries, metrics logs, and comparison plots saved in reports/models/.
 
 ## Output
