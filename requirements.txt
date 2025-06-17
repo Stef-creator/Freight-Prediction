@@ -64,7 +64,7 @@ plotly==6.0.1
 pmdarima==2.0.4
 prompt_toolkit==3.0.50
 prophet==1.1.6
-protobuf==5.29.4
+protobuf==5.29.5
 psutil==7.0.0
 ptyprocess==0.7.0
 pure_eval==0.2.3
